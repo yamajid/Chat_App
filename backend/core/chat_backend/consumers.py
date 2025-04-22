@@ -43,7 +43,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.room_group_name,
                 {
                     "type": "chat_message",
-                    "message": message['content'],
+                    "message": message,
                     "sender": self.channel_name
                 }
             )
@@ -56,6 +56,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         message = event["message"]
-        print(message)
+        print("message", message)
         # if self.channel_name != event["sender_channel_name"]:
         await self.send(text_data=json.dumps({"message": message}))

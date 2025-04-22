@@ -6,7 +6,7 @@ from .models import Message, ChatRoom
 class MessageSerializers(serializers.ModelSerializer):
     class Meta:
         model = Message
-        fields = ["room", "sender", "content", "is_invitation"]
+        fields = ["room", "sender", "content", 'timestamp', "is_invitation"]
 
 class ChatRoomSerializers(serializers.ModelSerializer):
     class Meta:

@@ -1,8 +1,12 @@
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState , useEffect} from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 function Register({onRegister}: any) {
+  const navigate = useNavigate();
+  const [navig, setNavig] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -17,12 +21,19 @@ function Register({onRegister}: any) {
         'username': formData.username,
         'password' : formData.password
      });
-    if (response.status == 200){
-        console.log(response.status);
-        onRegister();
+    if (response.status == 201){
+      setNavig(true)
+      onRegister();
     }
     console.log('Registration submitted:', formData);
   };
+  useEffect(() => {
+    if (navig){
+
+      navigate('/login');
+      
+    }
+  }, [navig]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

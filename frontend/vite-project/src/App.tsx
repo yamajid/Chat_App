@@ -48,7 +48,7 @@ function App() {
             isAuthenticated ? (
               <Navigate to="/profile" replace />
             ) : (
-              <Register onRegister={() => setIsAuthenticated(true)} />
+              <Register onRegister={() => setIsAuthenticated(false)} />
             )
           } 
         />
