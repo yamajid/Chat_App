@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 function Dashboard({ onLogout }: any) {
   const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState<string | null>(null);
-  const [users, setUsers] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<Rooms[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string | null>('');
   const [ready, setReady] = useState(false)
@@ -21,6 +21,12 @@ function Dashboard({ onLogout }: any) {
     content: string,
     timestamp: string,
     is_invitation: boolean
+  }
+
+  interface Rooms {
+    name: string,
+    room_type: string,
+    user: object,
   }
 
   // Check auth status
@@ -42,18 +48,18 @@ function Dashboard({ onLogout }: any) {
   };
 
 
-    useEffect(() => {
-      const fetchRooms = async () => {
-        const client = localStorage.getItem("user")
-        const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
-          params: {
-            username: client
-          }
-        });
-        setUsers(response.data);
-      };
-        fetchRooms();
-    }, [activeChat]);
+    // useEffect(() => {
+    //   const fetchRooms = async () => {
+    //     const client = localStorage.getItem("user")
+    //     const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
+    //       params: {
+    //         username: client
+    //       }
+    //     });
+    //     setRooms(response.data);
+    //   };
+    //     fetchRooms();
+    // }, [activeChat]);
 
   // Fetch messages (replace with your actual API call)
   useEffect(() => {
@@ -130,13 +136,13 @@ function Dashboard({ onLogout }: any) {
   const handlePrivate = async () => {
 
     setActiveChat('private')
-    // const user = localStorage.getItem("user");
-    // const response = await axiosInstance.get('http://localhost:8000/api/createroom/', {
-    //   params: {
-    //     username: user
-    //   }
-    // });
-    // console.log(response)
+  //   const user = localStorage.getItem("user");
+  //   const response = await axiosInstance.get('http://localhost:8000/api/createroom/', {
+  //     params: {
+  //       username: user
+  //     }
+  //   });
+  //   console.log(response)
   }
 
   useEffect(() => {
@@ -244,10 +250,10 @@ function Dashboard({ onLogout }: any) {
                 <h2 className="text-xl font-semibold text-gray-800">Private Messages</h2>
               </div>
               <div className="h-full p-4 overflow-y-auto">
-                {users.map((room) => (
-                  <div key={room.id} className="p-4 bg-gray-100 rounded-lg mb-4">
+                {rooms.map((room) => (
+                  <div key={room.name} className="p-4 bg-gray-100 rounded-lg mb-4">
                     <p className="font-semibold">{room.name}</p>
-                    <p className="text-sm text-gray-500">Last message: {room.last_message}</p>
+                    <p className="text-sm text-gray-500">Last message: {room.room_type}</p>
                   </div>
                 ))}
               </div>

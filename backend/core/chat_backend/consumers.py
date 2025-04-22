@@ -53,9 +53,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         serializer = MessageSerializers(data=message)
         if serializer.is_valid():
             serializer.save()
+        else:
+            print(serializer.errors)
 
     async def chat_message(self, event):
         message = event["message"]
-        print("message", message)
         # if self.channel_name != event["sender_channel_name"]:
         await self.send(text_data=json.dumps({"message": message}))

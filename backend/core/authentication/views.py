@@ -36,7 +36,7 @@ class UserLogin(APIView):
         except:
             return Response({'error': 'user not found'}, status=404)
         response = Response({
-            'user': user.username,
+            'user': user.id,
         }, status=200)
         secret_key = os.getenv('JWT_SECRET_KEY')
         access_token = generate_access_token(secret_key)
