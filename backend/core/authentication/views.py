@@ -8,6 +8,7 @@ from .serializers import UserSerializer
 from dotenv import load_dotenv
 from chat_backend.models import ChatRoom
 import datetime, jwt, os
+from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 load_dotenv()
@@ -32,62 +33,24 @@ class UserLogin(APIView):
             return Response({'username and password required'}, status=400)
         try: 
             user = get_object_or_404(User, username=username)
-            if user.check_password(password):
+            if not user.check_password(password):
                 return Response({'error': 'Invalid credentials'}, status=400)
         except:
             return Response({'error': 'user not found'}, status=404)
+        
+        refresh_token = RefreshToken.for_user(user)
+        access_token = refresh_token.access_token
         response = Response({
             'user': user.id,
+            'message': "you logged success",
         }, status=200)
-        secret_key = os.getenv('JWT_SECRET_KEY')
-        access_token = generate_access_token(secret_key)
-        refresh_token = generate_refresh_token(secret_key)
-        access_token  = access_token.create_token(user)
-        refresh_token = refresh_token.create_token(user)
-        response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, path='/') 
-        response.set_cookie(key='access_token', value=access_token, httponly=True, path='/')
+
+        refresh_expiry = datetime.datetime.utcnow() + datetime.timedelta(days=5)
+        access_expiry = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+        response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, path='/', samesite=None, secure=False, expires=refresh_expiry) 
+        response.set_cookie(key='access_token', value=access_token, httponly=True, path='/', samesite=None, secure=False, expires=access_expiry)
         return response
-        
-        
-class generate_access_token:
 
-
-    def __init__(self, secret):
-        self.secret_key = secret
-        
-    def create_token(self, user):
-
-        payload = {
-            'type': 'access',
-            'user_id': user.id,
-            'username': user.username,
-            'iat': datetime.datetime.utcnow(),
-            'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
-
-        }
-        token = jwt.encode(payload, self.secret_key)
-        return token
-
-class generate_refresh_token:
-
-
-    def __init__(self, secret):
-        self.secret_key = secret
-
-        
-    def create_token(self, user):
-
-        payload = {
-            'type': 'refresh',
-            'user_id': user.id,
-            'username': user.username,
-            'iat': datetime.datetime.utcnow(),
-            'exp' : datetime.datetime.utcnow() + datetime.timedelta(days=120)
-
-        }
-        token = jwt.encode(payload, self.secret_key)
-        return token
-     
 
 class UserLogout(APIView):
     def post(self, request):

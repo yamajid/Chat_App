@@ -7,6 +7,7 @@ from authentication.serializers import UserSerializer
 from .models import Message, ChatRoom
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated 
 
 User = get_user_model()
 
@@ -35,10 +36,9 @@ class FetchRooms(APIView):
             return Response({"errors": {str(e)}}, status=400)
 
 class FetchUsers(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         try:
-            refresh = request.COOKIES.get("refresh_token")
-            print(refresh)
             id = request.GET.get("id")
             users = User.objects.exclude(id=id)
             serializer = UserSerializer(users, many=True)
