@@ -7,11 +7,14 @@ function Dashboard({ onLogout }: any) {
   const navigate = useNavigate();
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [rooms, setRooms] = useState<Rooms[]>([]);
+  const [users, setUsers] = useState<Users[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string | null>('');
   const [ready, setReady] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+
   //   const [formData, setFormData] = useState<string | null>(null);
 
 
@@ -23,10 +26,24 @@ function Dashboard({ onLogout }: any) {
     is_invitation: boolean
   }
 
+  interface Users {
+    id: number,
+    username: string,
+    email: string,
+    date_joined: string
+  }
+
   interface Rooms {
+
     name: string,
     room_type: string,
-    user: object,
+    participants : Array<{
+      id: number,
+      username: string,
+      email: string,
+      date_joined: string,
+    }>,
+    created_at: string
   }
 
   // Check auth status
@@ -48,18 +65,6 @@ function Dashboard({ onLogout }: any) {
   };
 
 
-    // useEffect(() => {
-    //   const fetchRooms = async () => {
-    //     const client = localStorage.getItem("user")
-    //     const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
-    //       params: {
-    //         username: client
-    //       }
-    //     });
-    //     setRooms(response.data);
-    //   };
-    //     fetchRooms();
-    // }, [activeChat]);
 
   // Fetch messages (replace with your actual API call)
   useEffect(() => {
@@ -117,13 +122,13 @@ function Dashboard({ onLogout }: any) {
 
   const handleSentMessage = () => {
     if (message?.trim() === '') return
-    const user = localStorage.getItem("user");
-    if (!user)
+    const id = localStorage.getItem("user");
+    if (!id)
       return;
     if (socket) {
       const message_data = {
         content: message,
-        sender: user
+        sender: id
       }
       // setMessage()
       socket.send(JSON.stringify(message_data))
@@ -133,16 +138,47 @@ function Dashboard({ onLogout }: any) {
   }
 
 
+  const handleCreateNewRoom = async () => {
+    setShowUserModal(true)
+    
+    const id = localStorage.getItem("user")
+    const response = await axiosInstance.get("http://localhost:8000/api/users/", {
+      params: {
+          id : id
+      }
+    });
+    if (response.data.users && Array.isArray(response.data.users)){
+      setUsers(response.data.users)
+    }
+    else{
+      console.log("it's not an array")
+    }
+  }
+  useEffect(() => {
+    console.log(users); // Logs the updated users state whenever it changes
+  }, [users]);
+
   const handlePrivate = async () => {
 
     setActiveChat('private')
-  //   const user = localStorage.getItem("user");
-  //   const response = await axiosInstance.get('http://localhost:8000/api/createroom/', {
-  //     params: {
-  //       username: user
-  //     }
-  //   });
-  //   console.log(response)
+
+    // useEffect(() => {
+      const fetchRooms = async () => {
+        const client = localStorage.getItem("user")
+        const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
+          params: {
+            username: client
+          }
+        });
+        if (response.data.rooms && Array.isArray(response.data.rooms)) {
+          setRooms(response.data.rooms);
+          console.log("message", response.data.rooms)
+        } else {
+          console.error('Unexpected response format:', response.data);
+        }
+      };
+        fetchRooms();
+    // }, [activeChat]);
   }
 
   useEffect(() => {
@@ -150,6 +186,7 @@ function Dashboard({ onLogout }: any) {
       socket.close()
     }
   }, [activeChat])
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -175,6 +212,12 @@ function Dashboard({ onLogout }: any) {
             className={`w-full text-left p-3 rounded-lg ${activeChat === 'private' ? 'bg-indigo-50 text-indigo-600 font-medium' : 'hover:bg-gray-100'}`}
           >
             Private Messages
+          </button>
+          <button
+            onClick={handleCreateNewRoom}
+            className="w-full text-left p-3 rounded-lg hover:bg-gray-100"
+          >
+            Create New Room
           </button>
           <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100">
             Settings
@@ -259,6 +302,33 @@ function Dashboard({ onLogout }: any) {
               </div>
             </>
           )}
+                {showUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h2 className="text-lg font-semibold mb-4">Select a User to Create a New Room</h2>
+            <div className="space-y-4">
+              {/* Replace this hardcoded list with a dynamic list fetched from the backend */}
+              {users.map((user) => (
+                <div key={user.id} className="flex justify-between items-center">
+                  <p className="text-sm">{user.username}</p>
+                  <button
+                    className="bg-indigo-600 text-white rounded-lg px-3 py-1 hover:bg-indigo-700"
+                    onClick={() => console.log(`Invite sent to ${user.username}`)} // Replace with actual invite logic
+                  >
+                    Notify
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              className="mt-4 w-full bg-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-400"
+              onClick={() => setShowUserModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
           {!activeChat && (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
@@ -273,6 +343,7 @@ function Dashboard({ onLogout }: any) {
               </motion.button>
             </div>
           )}
+
         </motion.div>
       </div>
     </div>

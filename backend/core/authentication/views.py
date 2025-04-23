@@ -32,7 +32,8 @@ class UserLogin(APIView):
             return Response({'username and password required'}, status=400)
         try: 
             user = get_object_or_404(User, username=username)
-            user.check_password(password)
+            if user.check_password(password):
+                return Response({'error': 'Invalid credentials'}, status=400)
         except:
             return Response({'error': 'user not found'}, status=404)
         response = Response({

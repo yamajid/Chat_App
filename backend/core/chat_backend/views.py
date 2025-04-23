@@ -3,6 +3,7 @@ from rest_framework.response import  Response
 from rest_framework import  status
 from rest_framework.views import APIView
 from .serializers import MessageSerializers, ChatRoomSerializers
+from authentication.serializers import UserSerializer
 from .models import Message, ChatRoom
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -31,8 +32,32 @@ class FetchRooms(APIView):
             return Response({"rooms": serializer.data}, status=200)
         except Exception as e:
             print(e)
+            return Response({"errors": {str(e)}}, status=400)
+
+class FetchUsers(APIView):
+    def get(self, request):
+        try:
+            refresh = request.COOKIES.get("refresh_token")
+            print(refresh)
+            id = request.GET.get("id")
+            users = User.objects.exclude(id=id)
+            serializer = UserSerializer(users, many=True)
+            print(serializer.data)
+            return Response({"users": serializer.data}, status=200)
+        except Exception as e:
+            print(e)
+            return Response({"not found"}, status=400)
+        
+# class Notification(APIView):
+#     def post(self, request):
+#         try:
+#             sender_id = request.GET.get("id")
+#         except Exception as e:
+#             return Response("bad request", status=400)
     
 class CreateNewRoom(APIView):
+    def post(self, request):
+        return Response({"created"}, status=201)
     pass
 #     def get(self, request):
 #         username = request.GET.get("username")
