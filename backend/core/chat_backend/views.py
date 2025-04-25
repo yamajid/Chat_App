@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.response import  Response
 from rest_framework import  status
 from rest_framework.views import APIView
-from .serializers import MessageSerializers, ChatRoomSerializers
+from .serializers import MessageSerializers, ChatRoomSerializers, NotificationSerializers
 from authentication.serializers import UserSerializer
 from .models import Message, ChatRoom
 from django.shortcuts import get_object_or_404
@@ -13,6 +13,7 @@ User = get_user_model()
 
 
 class GeneralMessages(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         try:
             room_name = request.GET.get('room_name')
@@ -24,6 +25,7 @@ class GeneralMessages(APIView):
             print(e)
 
 class FetchRooms(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         username = request.GET.get('username')
         try:
@@ -42,18 +44,31 @@ class FetchUsers(APIView):
             id = request.GET.get("id")
             users = User.objects.exclude(id=id)
             serializer = UserSerializer(users, many=True)
-            print(serializer.data)
+            # print(serializer.data)
             return Response({"users": serializer.data}, status=200)
         except Exception as e:
             print(e)
             return Response({"not found"}, status=400)
         
-# class Notification(APIView):
-#     def post(self, request):
-#         try:
-#             sender_id = request.GET.get("id")
-#         except Exception as e:
-#             return Response("bad request", status=400)
+class Notification(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        try:
+            recipient_username = request.GET.get("username")
+            sender_id = request.user.id
+            print(recipient_username, "userrrrrrrrrrr")
+            recipient = User.objects.get(username=recipient_username)
+            if not recipient:
+                return Response ({"user not found"}, status=404)
+            try:
+                serializer = NotificationSerializers(id=sender_id)
+                serializer.is_valid()
+                serializer.save()
+                return Response(serializer.data, status=200)
+            except Exception as e:
+                print("error: ", e)
+        except Exception as e:
+            return Response("bad request" , status=400)
     
 class CreateNewRoom(APIView):
     def post(self, request):

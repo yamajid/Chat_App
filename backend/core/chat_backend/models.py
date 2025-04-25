@@ -7,14 +7,14 @@ User = get_user_model()
 
 
 
-# class Notification(models.Model):
-#     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent a notification")
-#     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recieve a notification")
-#     message = models.TextField()
-#     timestamp = models.DateTimeField(auto_now_add=True)
+class Notification(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_notification")
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recieve_notification")
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
-#         return 'Notification from {self.sender.username} to {self.recipient.username}'
+    def __str__(self):
+        return 'Notification from {self.sender.username} to {self.recipient.username}'
 
 class ChatRoom(models.Model):
     ROOM_TYPES = {

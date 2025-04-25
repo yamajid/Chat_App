@@ -16,11 +16,10 @@ axiosInstance.interceptors.request.use(
   config => {
     const token = Cookies.get('access_token');
     if (token) {
-        console.log(token)
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     else{
-        console.log("nooooone")
+          console.log("not token provided")
     }
     return config;
   },
@@ -30,3 +29,16 @@ axiosInstance.interceptors.request.use(
 );
 
 export default axiosInstance;
+
+
+export  async function refreshAuthToken() {
+  try {
+    const response = await axiosInstance.post(`http://localhost:8000/api/user/refresh`);
+    if (response.status !== 200)
+      throw Error
+    axiosInstance.defaults.headers['Authorization'] = `Bearer ${Cookies.get('access_token')}`;
+  } catch (error) {
+    // toast.error(error?.response?.data?.error ?? "You are not authorized.");
+    throw Error("401");
+  }
+}

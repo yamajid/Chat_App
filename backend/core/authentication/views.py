@@ -9,12 +9,53 @@ from dotenv import load_dotenv
 from chat_backend.models import ChatRoom
 import datetime, jwt, os
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import IsAuthenticated 
+import core.settings as settings
 
 User = get_user_model()
 load_dotenv()
 
+class CustomRefreshTokenView(APIView):
+    permission_classes = []
+    def post(self, request):
+        refresh_token = request.COOKIES.get("refresh_token")
+        print("ssssssss")
+        if not refresh_token:
+            return Response("No refresh token available", status=404)
+        try:
+            # token = RefreshToken(refresh_token)
+            decoded_token = jwt.decode(
+                refresh_token, 
+                settings.SECRET_KEY, 
+                algorithms=['HS256']
+            )
+            
+            # Get the user
+            user_id =  decoded_token['user_id']
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                return Response("No matched user ", 404)
+            refresh = RefreshToken(refresh_token)
+            access_token = str(refresh.access_token)
+            access_token_expiry = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
+            response = Response(data={'access_token generated'}, status=200)
+            response.set_cookie(
+                key='access_token',
+                value=access_token,
+                expires=access_token_expiry,
+                httponly=False,
+                samesite='Lax',
+                secure=False,
+                path='/'
+            )
+            return response
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+
 
 class UserRegister(APIView):
+    permission_classes = []
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -25,6 +66,7 @@ class UserRegister(APIView):
 
 
 class UserLogin(APIView):
+    permission_classes = []
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
@@ -47,12 +89,13 @@ class UserLogin(APIView):
 
         refresh_expiry = datetime.datetime.utcnow() + datetime.timedelta(days=5)
         access_expiry = datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-        response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, path='/', samesite=None, secure=False, expires=refresh_expiry) 
-        response.set_cookie(key='access_token', value=access_token, httponly=True, path='/', samesite=None, secure=False, expires=access_expiry)
+        response.set_cookie(key='refresh_token', value=refresh_token, httponly=True, path='/', samesite='Lax', secure=False, expires=refresh_expiry) 
+        response.set_cookie(key='access_token', value=access_token, httponly=False, path='/', samesite='Lax', secure=False, expires=access_expiry)
         return response
 
 
 class UserLogout(APIView):
+    permission_classes = []
     def post(self, request):
         
         response = Response({
@@ -67,7 +110,6 @@ class UserLogout(APIView):
             path='/',
         )
         return response
-        
         
 
 # Create your views here.

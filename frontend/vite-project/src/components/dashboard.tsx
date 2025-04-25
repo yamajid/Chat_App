@@ -1,6 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion, sync } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
-import axiosInstance from './axios';
+import axiosInstance, {refreshAuthToken} from './axios';
 import { useNavigate } from 'react-router-dom';
 
 function Dashboard({ onLogout }: any) {
@@ -64,7 +64,7 @@ function Dashboard({ onLogout }: any) {
     setMessage(value.value);
   };
 
-
+  
 
   // Fetch messages (replace with your actual API call)
   useEffect(() => {
@@ -77,6 +77,9 @@ function Dashboard({ onLogout }: any) {
               room_name: 'general'
             }
           });
+          if (response.status === 401){
+            console.log("accesss not ")
+          }
           if (response.data.messages && Array.isArray(response.data.messages)) {
             setMessages(response.data.messages); // Handle nested structure
             console.log("message", messages)
@@ -84,8 +87,12 @@ function Dashboard({ onLogout }: any) {
             console.error('Unexpected response format:', response.data);
           }
         }
-        catch (error) {
-          console.log(error)
+        catch (error: any) {
+          if(error.response){
+            if(error.response.status === 401)
+              await refreshAuthToken()
+
+          }
         }
 
       };
@@ -142,21 +149,39 @@ function Dashboard({ onLogout }: any) {
     setShowUserModal(true)
     
     const id = localStorage.getItem("user")
-    const response = await axiosInstance.get("http://localhost:8000/api/users/", {
-      params: {
-          id : id
-      }
-    });
-    if (response.data.users && Array.isArray(response.data.users)){
-      setUsers(response.data.users)
+    try{
+
+          const response = await axiosInstance.get("http://localhost:8000/api/users/", {
+            params: {
+              id : id
+            }
+            
+          });
+          if (response.data.users && Array.isArray(response.data.users)){
+            setUsers(response.data.users)
+          }
+          else{
+            console.log("it's not an array")
+          }
     }
-    else{
-      console.log("it's not an array")
+    catch(error: any){
+      if (error.response){
+          if (error.response.status === 401){
+            await refreshAuthToken()
+          }
+      }
     }
   }
   useEffect(() => {
     console.log(users); // Logs the updated users state whenever it changes
   }, [users]);
+
+  const handdleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) =>{
+    if (event.key === 'Enter'){
+      handleSentMessage()
+    }
+
+  }
 
   const handlePrivate = async () => {
 
@@ -165,16 +190,27 @@ function Dashboard({ onLogout }: any) {
     // useEffect(() => {
       const fetchRooms = async () => {
         const client = localStorage.getItem("user")
-        const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
-          params: {
-            username: client
+        try {
+
+          const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
+            params: {
+              username: client
+            }
+          });
+          if (response.data.rooms && Array.isArray(response.data.rooms)) {
+            setRooms(response.data.rooms);
+            console.log("message", response.data.rooms)
+          } else {
+            console.error('Unexpected response format:', response.data);
           }
-        });
-        if (response.data.rooms && Array.isArray(response.data.rooms)) {
-          setRooms(response.data.rooms);
-          console.log("message", response.data.rooms)
-        } else {
-          console.error('Unexpected response format:', response.data);
+        }
+        catch(error: any){
+          if (error.response){
+            if (error.response.status === 401){
+              await refreshAuthToken()
+              console.log("errrrrrrrrror")
+            }
+          }
         }
       };
         fetchRooms();
@@ -187,6 +223,20 @@ function Dashboard({ onLogout }: any) {
     }
   }, [activeChat])
   
+  const handleNotify = async (username: string) =>{
+      console.log(username)
+      const response = await axiosInstance.post('http://localhost:8000/api/notify/', {
+        params: {
+          username: username
+        }
+      });
+      if (response.status === 200){
+        console.log("successsssss")
+      }
+  }
+
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -271,10 +321,11 @@ function Dashboard({ onLogout }: any) {
                     value={message as string}
                     onChange={handleChange}
                     placeholder="Type your message..."
+                    onKeyDown={handdleKeyPress}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <button className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
-                    onClick={handleSentMessage}
+                  onClick={handleSentMessage}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -313,7 +364,8 @@ function Dashboard({ onLogout }: any) {
                   <p className="text-sm">{user.username}</p>
                   <button
                     className="bg-indigo-600 text-white rounded-lg px-3 py-1 hover:bg-indigo-700"
-                    onClick={() => console.log(`Invite sent to ${user.username}`)} // Replace with actual invite logic
+                    onClick={() => handleNotify(user.username)} // Replace with actual invite logic
+
                   >
                     Notify
                   </button>

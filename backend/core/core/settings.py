@@ -26,12 +26,12 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+CORS_ALLOW_CREDENTIALS = True
+# CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Or any frontend domain
+    "ws://localhost:5173",  # Or any frontend domain
 ]
-
-CORS_ALLOW_CREDENTIALS = True
 
 ASGI_APPLICATION = 'core.asgi.application'
 
@@ -64,13 +64,11 @@ SIMPLE_JWT = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-        'rest_framework.authentication.SessionAuthentication',  # For session-based auth
-        'rest_framework.authentication.BasicAuthentication',    # For basic auth
-        'rest_framework.authentication.TokenAuthentication',    # For token-based auth
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication'
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Block unauthenticated requests
     ]
 }
 
@@ -107,6 +105,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'chat_backend.middleware.JWTAuthMiddleware'
+    
 ]
 
 ROOT_URLCONF = 'core.urls'
