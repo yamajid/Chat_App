@@ -55,10 +55,7 @@ class NotificationView(APIView):
     def get(self, request):
         try:
             sender_username = request.user
-            sender = User.objects.get(username=sender_username)
-            if not sender:
-                return Response ({"user not found"}, status=404)
-            invite = Invitation.objects.filter(invitee=sender_username.id)
+            invite = Invitation.objects.filter(invitee=sender_username.id, status_choice="pending")
             serializer = InvitationSerializers(invite, many=True)
             return Response({"Invitations": serializer.data, "count": len(serializer.data)}, status=200)
         except Exception as e:
@@ -72,6 +69,15 @@ class RespondToInvitationView(APIView):
     def patch(self, request):
         try:
             pk = request.GET.get("inviteId")
+            # if Invitation.objects.filter(
+            #     inviter=pk,
+            #     invitee=request.user,
+            #     status_choice="pending"
+            # ).exists():
+            #     return Response(
+            #         {"error": "Invitation already sent to this user"},
+            #         status=400
+            #     )
             invitation = Invitation.objects.get(
                 inviter=pk,
                 invitee=request.user,
@@ -96,8 +102,7 @@ class RespondToInvitationView(APIView):
                 
             elif new_status == 'rejected':
                 invitation.delete()
-                return Response(
-                    {"message": "Invitation rejected and removed."},
+                return Response({"message": "Invitation rejected and removed."},
                     status=status.HTTP_200_OK
                 )
             else:
@@ -129,6 +134,9 @@ class InvitationView(APIView):
             sender = User.objects.get(username=sender_username)
             if not receiver or not sender:
                 return Response ({"user not found"}, status=404)
+            existing_room = ChatRoom.objects.filter(participants=sender, room_type="private").filter(participants=receiver, room_type="private").exists()
+            if existing_room:
+                return Response({"error": "You already share a room with this user"}, status=400)
             if Invitation.objects.filter(inviter=sender.id, invitee=receiver.id).exists():
                 return Response({"invitation is already sent to this user"}, status=400)
             invitation_data = {

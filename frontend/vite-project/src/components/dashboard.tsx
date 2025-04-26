@@ -14,6 +14,9 @@ function Dashboard({ onLogout }: any) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [notifications, setNotification] = useState<any[]>([])
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+
 
   //   const [formData, setFormData] = useState<string | null>(null);
 
@@ -224,32 +227,68 @@ function Dashboard({ onLogout }: any) {
   }, [activeChat])
 
   const handleNotify = async (username: string) => {
-    console.log(username)
-    const response = await axiosInstance.post(`http://localhost:8000/api/invite/?username=${username}`, {
+    try{
 
-      inviter: '',
-      invitee: username,
-      status_choice: "pending"
-
-    });
-    if (response.status === 200) {
-      console.log("successsssss")
+      const response = await axiosInstance.post(`http://localhost:8000/api/invite/?username=${username}`, {
+        
+        inviter: '',
+        invitee: username,
+        status_choice: "pending"
+        
+      });
+      if (response.status === 200) {
+        console.log("successsssss")
+      }
     }
+   catch (error: any) {
+    if (error.response?.data?.error === "Invitation already sent to this user") {
+      // Handle duplicate invitation case
+      console.log("Invitation already exists");
+      return;
+    }
+    console.error("Error sending invitation:", error);
+  }
   }
 
-// Fetch unread notifications count
+  // Fetch unread notifications count
 
-  const [notify, setNotify] = useState()
 
   const handleNotifications = async () => {
-    // Mark as read when clicked
-    const response =   await axiosInstance.get('/api/notify/');
-    if (response.status === 200){
-      setNotify(response.data)
-      console.log("dataaaaaaaaaa", response.data)
+    const response = await axiosInstance.get('/api/notify/');
+    if (response.status === 200) {
+      setNotification(response.data.Invitations)
+      setShowNotificationPopup(true);
+      console.log(notifications)
     }
-    
-    // Open notifications panel or navigate
+
+  };
+
+  const handleAcceptInvitation = async (invitationId: number) => {
+    try {
+      const response = await axiosInstance.patch(`/api/accpetorreject/?inviteId=${invitationId}`,
+        { status: 'accepted' }
+      );
+      if (response.status === 200) {
+        await handleNotifications();
+      }
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+    }
+  };
+
+  const handleRejectInvitation = async (invitationId: number) => {
+    try {
+      const response = await axiosInstance.patch(
+        `/api/accpetorreject/?inviteId=${invitationId}`,
+        { status: 'rejected' }
+      );
+      if (response.status === 200) {
+        // Refresh notifications
+        await handleNotifications();
+      }
+    } catch (error) {
+      console.error("Error rejecting invitation:", error);
+    }
   };
 
 
@@ -285,9 +324,9 @@ function Dashboard({ onLogout }: any) {
             className="w-full text-left p-3 rounded-lg hover:bg-gray-100 flex justify-between items-center relative"
           >
             <span>Notifications</span>
-            {!notify && (
+            {notifications.length > 0 && (
               <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                {notify}
+                {notifications.length}
               </span>
             )}
           </button>
@@ -363,6 +402,56 @@ function Dashboard({ onLogout }: any) {
                 </div>
               </motion.div>
             </>
+          )}
+          {showNotificationPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <motion.div
+                className="bg-white rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">Notifications</h2>
+                  <button
+                    onClick={() => setShowNotificationPopup(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {notifications.length === 0 ? (
+                  <p className="text-gray-500 text-center py-4">No new notifications</p>
+                ) : (
+                  <div className="space-y-3">
+                    {notifications.map((notification) => (
+                      <div key={notification.inviter} className="p-3 border-b border-gray-100 hover:bg-gray-50">
+                        <p className="font-medium">{`Invitation from ${notification.inviter}`}</p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(notification.timestamp).toLocaleString()}
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={() => handleAcceptInvitation(notification.inviter)}
+                            className="text-xs bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectInvitation(notification.inviter)}
+                            className="text-xs bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            </div>
           )}
 
           {/* Placeholder for when no chat is selected */}
