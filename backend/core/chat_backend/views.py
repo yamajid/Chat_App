@@ -59,12 +59,63 @@ class NotificationView(APIView):
             if not sender:
                 return Response ({"user not found"}, status=404)
             invite = Invitation.objects.filter(invitee=sender_username.id)
-            print(invite)
-            serializer = InvitationSerializers()
-            serializer.is_valid()
-            return Response({"message": f"invitation from {serializer.data['inviter']}"}, status=200)
+            serializer = InvitationSerializers(invite, many=True)
+            return Response({"Invitations": serializer.data, "count": len(serializer.data)}, status=200)
         except Exception as e:
+            print(e)
             return Response("bad request" , status=400)
+
+
+class RespondToInvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        try:
+            pk = request.GET.get("inviteId")
+            invitation = Invitation.objects.get(
+                inviter=pk,
+                invitee=request.user,
+                status_choice='pending'
+            )
+            
+            new_status = request.data.get('status')
+            
+            if new_status == 'accepted':
+                room = ChatRoom.objects.create(
+                    name=f"{invitation.inviter.username}-{invitation.invitee.username}",
+                    room_type='private'
+                )
+                room.participants.add(invitation.inviter, invitation.invitee)
+                room.save()
+                invitation.delete()
+                
+                return Response({
+                    "message": "Invitation accepted. New room created.",
+                    "room_id": room.id
+                }, status=status.HTTP_200_OK)
+                
+            elif new_status == 'rejected':
+                invitation.delete()
+                return Response(
+                    {"message": "Invitation rejected and removed."},
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {"error": "Invalid status. Use 'accepted' or 'rejected'"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                    
+        except Invitation.DoesNotExist:
+            return Response(
+                {"error": "Invitation not found or already processed"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
 
 class InvitationView(APIView):

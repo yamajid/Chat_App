@@ -19,8 +19,8 @@ class Notification(models.Model):
     notification_type = models.CharField(max_length=10, choices=NOTIFICATION_TYPES)
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return 'Notification from {self.sender.username} to {self.recipient.username}'
+    # def __str__(self):
+    #     return 'Notification from {self.sender.username} to {self.recipient.username}'
     
 class Invitation(models.Model):
     inviter = models.ForeignKey(User, related_name='sent_invites', on_delete=models.CASCADE)
@@ -32,8 +32,8 @@ class Invitation(models.Model):
     }
     status_choice = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     timestamp = models.DateTimeField(auto_now_add=True)
-    def __str__(self):
-        return f'invitation between {self.inviter} and {self.invitee}'
+    # def __str__(self):
+    #     return f'invitation between {self.inviter} and {self.invitee}'
 
 
 
