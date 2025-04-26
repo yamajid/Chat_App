@@ -2,12 +2,13 @@ from django.shortcuts import render
 from rest_framework.response import  Response
 from rest_framework import  status
 from rest_framework.views import APIView
-from .serializers import MessageSerializers, ChatRoomSerializers, NotificationSerializers
+from .serializers import MessageSerializers, ChatRoomSerializers, NotificationSerializers, InvitationSerializers
 from authentication.serializers import UserSerializer
-from .models import Message, ChatRoom
+from .models import Message, ChatRoom, Invitation, Notification
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated 
+from rest_framework.validators import ValidationError
 
 User = get_user_model()
 
@@ -44,32 +45,58 @@ class FetchUsers(APIView):
             id = request.GET.get("id")
             users = User.objects.exclude(id=id)
             serializer = UserSerializer(users, many=True)
-            # print(serializer.data)
             return Response({"users": serializer.data}, status=200)
         except Exception as e:
             print(e)
             return Response({"not found"}, status=400)
         
-class Notification(APIView):
+class NotificationView(APIView):
     permission_classes = [IsAuthenticated]
-    def post(self, request):
+    def get(self, request):
         try:
-            recipient_username = request.GET.get("username")
-            sender_id = request.user.id
-            print(recipient_username, "userrrrrrrrrrr")
-            recipient = User.objects.get(username=recipient_username)
-            if not recipient:
+            sender_username = request.user
+            sender = User.objects.get(username=sender_username)
+            if not sender:
                 return Response ({"user not found"}, status=404)
-            try:
-                serializer = NotificationSerializers(id=sender_id)
-                serializer.is_valid()
-                serializer.save()
-                return Response(serializer.data, status=200)
-            except Exception as e:
-                print("error: ", e)
+            invite = Invitation.objects.filter(invitee=sender_username.id)
+            print(invite)
+            serializer = InvitationSerializers()
+            serializer.is_valid()
+            return Response({"message": f"invitation from {serializer.data['inviter']}"}, status=200)
         except Exception as e:
             return Response("bad request" , status=400)
     
+
+class InvitationView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        receiver_username = request.GET.get("username")
+        sender_username = request.user
+        request.data['inviter'] = sender_username
+        try:
+            receiver = User.objects.get(username=receiver_username)
+            sender = User.objects.get(username=sender_username)
+            if not receiver or not sender:
+                return Response ({"user not found"}, status=404)
+            if Invitation.objects.filter(inviter=sender.id, invitee=receiver.id).exists():
+                return Response({"invitation is already sent to this user"}, status=400)
+            invitation_data = {
+                "inviter": sender_username.id,
+                "invitee": receiver.id,
+                "status_choice": "pending"
+            }
+            serializer = InvitationSerializers(data=invitation_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({"invitation created success"}, status=201)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+        
+
+
+
+
+
 class CreateNewRoom(APIView):
     def post(self, request):
         return Response({"created"}, status=201)

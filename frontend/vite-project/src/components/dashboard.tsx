@@ -1,6 +1,6 @@
 import { motion, sync } from 'framer-motion';
 import { useEffect, useState, useRef } from 'react';
-import axiosInstance, {refreshAuthToken} from './axios';
+import axiosInstance, { refreshAuthToken } from './axios';
 import { useNavigate } from 'react-router-dom';
 
 function Dashboard({ onLogout }: any) {
@@ -37,7 +37,7 @@ function Dashboard({ onLogout }: any) {
 
     name: string,
     room_type: string,
-    participants : Array<{
+    participants: Array<{
       id: number,
       username: string,
       email: string,
@@ -64,7 +64,7 @@ function Dashboard({ onLogout }: any) {
     setMessage(value.value);
   };
 
-  
+
 
   // Fetch messages (replace with your actual API call)
   useEffect(() => {
@@ -77,7 +77,7 @@ function Dashboard({ onLogout }: any) {
               room_name: 'general'
             }
           });
-          if (response.status === 401){
+          if (response.status === 401) {
             console.log("accesss not ")
           }
           if (response.data.messages && Array.isArray(response.data.messages)) {
@@ -88,8 +88,8 @@ function Dashboard({ onLogout }: any) {
           }
         }
         catch (error: any) {
-          if(error.response){
-            if(error.response.status === 401)
+          if (error.response) {
+            if (error.response.status === 401)
               await refreshAuthToken()
 
           }
@@ -99,7 +99,7 @@ function Dashboard({ onLogout }: any) {
       fetchMessages();
     }
   }, [activeChat, ready]);
-  
+
 
 
   useEffect(() => {
@@ -147,28 +147,28 @@ function Dashboard({ onLogout }: any) {
 
   const handleCreateNewRoom = async () => {
     setShowUserModal(true)
-    
-    const id = localStorage.getItem("user")
-    try{
 
-          const response = await axiosInstance.get("http://localhost:8000/api/users/", {
-            params: {
-              id : id
-            }
-            
-          });
-          if (response.data.users && Array.isArray(response.data.users)){
-            setUsers(response.data.users)
-          }
-          else{
-            console.log("it's not an array")
-          }
+    const id = localStorage.getItem("user")
+    try {
+
+      const response = await axiosInstance.get("http://localhost:8000/api/users/", {
+        params: {
+          id: id
+        }
+
+      });
+      if (response.data.users && Array.isArray(response.data.users)) {
+        setUsers(response.data.users)
+      }
+      else {
+        console.log("it's not an array")
+      }
     }
-    catch(error: any){
-      if (error.response){
-          if (error.response.status === 401){
-            await refreshAuthToken()
-          }
+    catch (error: any) {
+      if (error.response) {
+        if (error.response.status === 401) {
+          await refreshAuthToken()
+        }
       }
     }
   }
@@ -176,8 +176,8 @@ function Dashboard({ onLogout }: any) {
     console.log(users); // Logs the updated users state whenever it changes
   }, [users]);
 
-  const handdleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) =>{
-    if (event.key === 'Enter'){
+  const handdleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
       handleSentMessage()
     }
 
@@ -188,32 +188,32 @@ function Dashboard({ onLogout }: any) {
     setActiveChat('private')
 
     // useEffect(() => {
-      const fetchRooms = async () => {
-        const client = localStorage.getItem("user")
-        try {
+    const fetchRooms = async () => {
+      const client = localStorage.getItem("user")
+      try {
 
-          const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
-            params: {
-              username: client
-            }
-          });
-          if (response.data.rooms && Array.isArray(response.data.rooms)) {
-            setRooms(response.data.rooms);
-            console.log("message", response.data.rooms)
-          } else {
-            console.error('Unexpected response format:', response.data);
+        const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
+          params: {
+            username: client
+          }
+        });
+        if (response.data.rooms && Array.isArray(response.data.rooms)) {
+          setRooms(response.data.rooms);
+          console.log("message", response.data.rooms)
+        } else {
+          console.error('Unexpected response format:', response.data);
+        }
+      }
+      catch (error: any) {
+        if (error.response) {
+          if (error.response.status === 401) {
+            await refreshAuthToken()
+            console.log("errrrrrrrrror")
           }
         }
-        catch(error: any){
-          if (error.response){
-            if (error.response.status === 401){
-              await refreshAuthToken()
-              console.log("errrrrrrrrror")
-            }
-          }
-        }
-      };
-        fetchRooms();
+      }
+    };
+    fetchRooms();
     // }, [activeChat]);
   }
 
@@ -222,20 +222,35 @@ function Dashboard({ onLogout }: any) {
       socket.close()
     }
   }, [activeChat])
-  
-  const handleNotify = async (username: string) =>{
-      console.log(username)
-      const response = await axiosInstance.post('http://localhost:8000/api/notify/', {
-        params: {
-          username: username
-        }
-      });
-      if (response.status === 200){
-        console.log("successsssss")
-      }
+
+  const handleNotify = async (username: string) => {
+    console.log(username)
+    const response = await axiosInstance.post(`http://localhost:8000/api/invite/?username=${username}`, {
+
+      inviter: '',
+      invitee: username,
+      status_choice: "pending"
+
+    });
+    if (response.status === 200) {
+      console.log("successsssss")
+    }
   }
 
+// Fetch unread notifications count
 
+  const [notify, setNotify] = useState()
+
+  const handleNotifications = async () => {
+    // Mark as read when clicked
+    const response =   await axiosInstance.get('/api/notify/');
+    if (response.status === 200){
+      setNotify(response.data)
+      console.log("dataaaaaaaaaa", response.data)
+    }
+    
+    // Open notifications panel or navigate
+  };
 
 
   return (
@@ -263,6 +278,20 @@ function Dashboard({ onLogout }: any) {
           >
             Private Messages
           </button>
+
+          {/* Notification Button with Badge */}
+          <button
+            onClick={handleNotifications}
+            className="w-full text-left p-3 rounded-lg hover:bg-gray-100 flex justify-between items-center relative"
+          >
+            <span>Notifications</span>
+            {!notify && (
+              <span className="bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {notify}
+              </span>
+            )}
+          </button>
+
           <button
             onClick={handleCreateNewRoom}
             className="w-full text-left p-3 rounded-lg hover:bg-gray-100"
@@ -325,7 +354,7 @@ function Dashboard({ onLogout }: any) {
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   />
                   <button className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
-                  onClick={handleSentMessage}
+                    onClick={handleSentMessage}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -353,34 +382,34 @@ function Dashboard({ onLogout }: any) {
               </div>
             </>
           )}
-                {showUserModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <h2 className="text-lg font-semibold mb-4">Select a User to Create a New Room</h2>
-            <div className="space-y-4">
-              {/* Replace this hardcoded list with a dynamic list fetched from the backend */}
-              {users.map((user) => (
-                <div key={user.id} className="flex justify-between items-center">
-                  <p className="text-sm">{user.username}</p>
-                  <button
-                    className="bg-indigo-600 text-white rounded-lg px-3 py-1 hover:bg-indigo-700"
-                    onClick={() => handleNotify(user.username)} // Replace with actual invite logic
+          {showUserModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+              <div className="bg-white rounded-lg p-6 w-96">
+                <h2 className="text-lg font-semibold mb-4">Select a User to Create a New Room</h2>
+                <div className="space-y-4">
+                  {/* Replace this hardcoded list with a dynamic list fetched from the backend */}
+                  {users.map((user) => (
+                    <div key={user.id} className="flex justify-between items-center">
+                      <p className="text-sm">{user.username}</p>
+                      <button
+                        className="bg-indigo-600 text-white rounded-lg px-3 py-1 hover:bg-indigo-700"
+                        onClick={() => handleNotify(user.username)} // Replace with actual invite logic
 
-                  >
-                    Notify
-                  </button>
+                      >
+                        Notify
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <button
+                  className="mt-4 w-full bg-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-400"
+                  onClick={() => setShowUserModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-            <button
-              className="mt-4 w-full bg-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-400"
-              onClick={() => setShowUserModal(false)}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+          )}
 
           {!activeChat && (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">

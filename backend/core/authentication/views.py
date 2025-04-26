@@ -77,7 +77,7 @@ class UserLogin(APIView):
             user = get_object_or_404(User, username=username)
             if not user.check_password(password):
                 return Response({'error': 'Invalid credentials'}, status=400)
-        except:
+        except Exception as e:
             return Response({'error': 'user not found'}, status=404)
         
         refresh_token = RefreshToken.for_user(user)
