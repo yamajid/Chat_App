@@ -21,9 +21,10 @@ class GeneralMessages(APIView):
             chat_room = ChatRoom.objects.get(name=room_name)
             message = Message.objects.filter(room=chat_room)
             serializer = MessageSerializers(message, many=True)
-            return Response({"messages": serializer.data}, status=200)
+            return Response({"messages": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
+            return Response({"Faild getting general message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class FetchRooms(APIView):
     permission_classes = [IsAuthenticated]
@@ -33,10 +34,10 @@ class FetchRooms(APIView):
             user = get_object_or_404(User, id=username)
             rooms = ChatRoom.objects.filter(participants=user, room_type="private").order_by('created_at')
             serializer = ChatRoomSerializers(rooms, many=True)
-            return Response({"rooms": serializer.data}, status=200)
+            return Response({"rooms": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
-            return Response({"errors": {str(e)}}, status=400)
+            return Response({"errors": {str(e)}}, status=status.HTTP_400_BAD_REQUEST)
 
 class FetchUsers(APIView):
     permission_classes = [IsAuthenticated]
@@ -45,11 +46,34 @@ class FetchUsers(APIView):
             id = request.GET.get("id")
             users = User.objects.exclude(id=id)
             serializer = UserSerializer(users, many=True)
-            return Response({"users": serializer.data}, status=200)
+            return Response({"users": serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
-            return Response({"not found"}, status=400)
-        
+            return Response({"Not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class FetchRoom(APIView):
+    def get(self, request):
+        room_name = request.GET.get("username")
+        if not room_name:
+            return Response({"Username not found in request URL"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            room = ChatRoom.objects.filter(
+                room_type="private"
+            ).filter(name=room_name).first()
+            print(room)
+            if not room:
+                return Response({"No matched room available"}, status=status.HTTP_404_NOT_FOUND)
+            messages = Message.objects.filter(room=room).order_by("timestamp")
+            room_serializer = ChatRoomSerializers(room)
+            message_serializers = MessageSerializers(messages, many=True)
+            return Response ({
+                "room" : room_serializer.data,
+                "messages" : message_serializers.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response({"an error while fetching room": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 class NotificationView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -57,10 +81,10 @@ class NotificationView(APIView):
             sender_username = request.user
             invite = Invitation.objects.filter(invitee=sender_username.id, status_choice="pending")
             serializer = InvitationSerializers(invite, many=True)
-            return Response({"Invitations": serializer.data, "count": len(serializer.data)}, status=200)
+            return Response({"Invitations": serializer.data, "count": len(serializer.data)}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
-            return Response("bad request" , status=400)
+            return Response("bad request" , status=status.HTTP_400_BAD_REQUEST)
 
 
 class RespondToInvitationView(APIView):
@@ -68,18 +92,9 @@ class RespondToInvitationView(APIView):
 
     def patch(self, request):
         try:
-            pk = request.GET.get("inviteId")
-            # if Invitation.objects.filter(
-            #     inviter=pk,
-            #     invitee=request.user,
-            #     status_choice="pending"
-            # ).exists():
-            #     return Response(
-            #         {"error": "Invitation already sent to this user"},
-            #         status=400
-            #     )
+            inviter_id = request.GET.get("inviteId")
             invitation = Invitation.objects.get(
-                inviter=pk,
+                inviter=inviter_id,
                 invitee=request.user,
                 status_choice='pending'
             )
@@ -87,40 +102,23 @@ class RespondToInvitationView(APIView):
             new_status = request.data.get('status')
             
             if new_status == 'accepted':
-                room = ChatRoom.objects.create(
-                    name=f"{invitation.inviter.username}-{invitation.invitee.username}",
-                    room_type='private'
-                )
+                room = ChatRoom.objects.create(name=f"{invitation.inviter.username}_{invitation.invitee.username}", room_type='private')
                 room.participants.add(invitation.inviter, invitation.invitee)
                 room.save()
                 invitation.delete()
                 
-                return Response({
-                    "message": "Invitation accepted. New room created.",
-                    "room_id": room.id
-                }, status=status.HTTP_200_OK)
+                return Response({"message": "Invitation accepted. New room created.", "room_id": room.id}, status=status.HTTP_200_OK)
                 
             elif new_status == 'rejected':
                 invitation.delete()
-                return Response({"message": "Invitation rejected and removed."},
-                    status=status.HTTP_200_OK
-                )
+                return Response({"message": "Invitation rejected and removed."},status=status.HTTP_200_OK)
             else:
-                return Response(
-                    {"error": "Invalid status. Use 'accepted' or 'rejected'"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                return Response({"error": "Invalid status. Use 'accepted' or 'rejected'"}, status=status.HTTP_400_BAD_REQUEST)
                     
         except Invitation.DoesNotExist:
-            return Response(
-                {"error": "Invitation not found or already processed"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"error": "Invitation not found or already processed"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response(
-                {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({"error": str(e)},status=status.HTTP_400_BAD_REQUEST)
     
 
 class InvitationView(APIView):
@@ -133,12 +131,12 @@ class InvitationView(APIView):
             receiver = User.objects.get(username=receiver_username)
             sender = User.objects.get(username=sender_username)
             if not receiver or not sender:
-                return Response ({"user not found"}, status=404)
+                return Response ({"user not found"}, status=status.HTTP_404_NOT_FOUND)
             existing_room = ChatRoom.objects.filter(participants=sender, room_type="private").filter(participants=receiver, room_type="private").exists()
             if existing_room:
-                return Response({"error": "You already share a room with this user"}, status=400)
+                return Response({"error": "You already share a room with this user"}, status=status.HTTP_400_BAD_REQUEST)
             if Invitation.objects.filter(inviter=sender.id, invitee=receiver.id).exists():
-                return Response({"invitation is already sent to this user"}, status=400)
+                return Response({"invitation is already sent to this user"}, status=status.HTTP_400_BAD_REQUEST)
             invitation_data = {
                 "inviter": sender_username.id,
                 "invitee": receiver.id,
@@ -147,36 +145,8 @@ class InvitationView(APIView):
             serializer = InvitationSerializers(data=invitation_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            return Response({"invitation created success"}, status=201)
+            return Response({"invitation created success"}, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 
-
-
-
-
-class CreateNewRoom(APIView):
-    def post(self, request):
-        return Response({"created"}, status=201)
-    pass
-#     def get(self, request):
-#         username = request.GET.get("username")
-#         user = get_object_or_404(User, id=username)
-#         rooms = ChatRoom.objects.filter(name="test", room_type="private")
-#         if not rooms:
-#             chat_room = ChatRoom.objects.create(name="test", room_type="private")
-#             if not chat_room.participants.filter(id=user.id).exists():
-#                 chat_room.participants.add(user)
-#             return Response({"addes success"}, status=201)
-#         return Response({"room exist"}, status=404)
-    # def post(self, request, room_name):
-    #     try:
-    #         chat_room = ChatRoom.objects.get(name=room_name)
-    #         serializer = MessageSerializers(request.data)
-    #         if serializer.is_valid():
-    #             serializer.save(room=chat_room, sender=request.user)
-    #             return Response(serializer.data, status=200)''
-    #     except ChatRoom.DoesNotExist:
-    #         return Response({"error": "Chat room not found"}, status=404)
-# Create your views here.

@@ -5,11 +5,12 @@ from .serializers import MessageSerializers
 from channels.db import database_sync_to_async
 from authentication import models
 from django.contrib.auth import get_user_model
-from .models import Message
+from .models import Message, ChatRoom
+from .serializers import MessageSerializers
 
 User = get_user_model()
 
-class ChatConsumer(AsyncWebsocketConsumer):
+class GeneralChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
         self.room_group_name = "general"
@@ -60,3 +61,67 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = event["message"]
         # if self.channel_name != event["sender_channel_name"]:
         await self.send(text_data=json.dumps({"message": message}))
+
+
+class PrivateChatConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.room_name = self.scope['url_route']['kwargs']['room_name']
+        self.room_group_name = f'private_{self.room_name}'
+        
+        # Verify user has permission to join this room
+        if await self.verify_user_permission():
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            await self.accept()
+        else:
+            await self.close()
+
+    async def disconnect(self):
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        message = {
+            "type": "private",
+            "room": self.room_name,
+            "sender": data["sender"],
+            "content": data["content"],
+            "is_invitation": False
+        }
+        
+        await self.save_message(message)
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                "type": "chat_message",
+                "message": message
+            }
+        )
+
+    async def chat_message(self, event):
+        message = event["message"]
+        await self.send(text_data=json.dumps({"message": message}))
+
+    @database_sync_to_async
+    def save_message(self, message):
+        serializer = MessageSerializers(data=message)
+        if serializer.is_valid():
+            serializer.save()
+
+    @database_sync_to_async
+    def verify_user_permission(self):
+        """Check if user is a participant of this private room"""
+        user = self.scope["user"]
+        try:
+            room = ChatRoom.objects.get(
+                name=self.room_name,
+                participants=user
+            )
+            return True
+        except ChatRoom.DoesNotExist:
+            return False

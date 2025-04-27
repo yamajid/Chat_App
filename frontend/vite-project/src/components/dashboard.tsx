@@ -28,14 +28,6 @@ function Dashboard({ onLogout }: any) {
     timestamp: string,
     is_invitation: boolean
   }
-
-  interface Users {
-    id: number,
-    username: string,
-    email: string,
-    date_joined: string
-  }
-
   interface Rooms {
 
     name: string,
@@ -48,6 +40,14 @@ function Dashboard({ onLogout }: any) {
     }>,
     created_at: string
   }
+
+  interface Users {
+    id: number,
+    username: string,
+    email: string,
+    date_joined: string
+  }
+
 
   // Check auth status
   useEffect(() => {
@@ -144,6 +144,18 @@ function Dashboard({ onLogout }: any) {
       socket.send(JSON.stringify(message_data))
 
     }
+    else if (activeChat?.startsWith('private-')) {
+      const roomName = activeChat.replace('private-', '');
+      // Send private message to the backend
+      axiosInstance.post('/api/send-private-message/', {
+        room: roomName,
+        content: message,
+        sender: id
+      }).then(() => {
+        // Refresh messages after sending
+        fetchPrivateRoomMessages(roomName);
+      });
+    }
     setMessage('');
   }
 
@@ -227,27 +239,27 @@ function Dashboard({ onLogout }: any) {
   }, [activeChat])
 
   const handleNotify = async (username: string) => {
-    try{
+    try {
 
       const response = await axiosInstance.post(`http://localhost:8000/api/invite/?username=${username}`, {
-        
+
         inviter: '',
         invitee: username,
         status_choice: "pending"
-        
+
       });
       if (response.status === 200) {
         console.log("successsssss")
       }
     }
-   catch (error: any) {
-    if (error.response?.data?.error === "Invitation already sent to this user") {
-      // Handle duplicate invitation case
-      console.log("Invitation already exists");
-      return;
+    catch (error: any) {
+      if (error.response?.data?.error === "Invitation already sent to this user") {
+        // Handle duplicate invitation case
+        console.log("Invitation already exists");
+        return;
+      }
+      console.error("Error sending invitation:", error);
     }
-    console.error("Error sending invitation:", error);
-  }
   }
 
   // Fetch unread notifications count
@@ -291,6 +303,39 @@ function Dashboard({ onLogout }: any) {
     }
   };
 
+  const handlePrivateConnection = async (room_name: string) => {
+    const ws = new WebSocket(`ws://localhost:8000/ws/chat/?room_name=${room_name}`)
+
+    ws.onopen = () => {
+      console.log('WebSocket connection established')
+    }
+    ws.onclose = () => {
+      console.log('WebSocket connection closed')
+    }
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      setReady((prev) => !prev)
+      console.log(data);
+    }
+    setSocket(ws)
+  }
+
+  const fetchPrivateRoomMessages = async (username: string) => {
+    try {
+      const response = await axiosInstance.get(`http://localhost:8000/api/room/?username=${username}`);
+
+      if (response.data.room && response.data.messages) {
+        setMessages(response.data.messages);
+        await handlePrivateConnection(response.data.room.name)
+        return response.data.room;
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        await refreshAuthToken();
+      }
+      console.error('Error fetching private room:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -455,19 +500,78 @@ function Dashboard({ onLogout }: any) {
           )}
 
           {/* Placeholder for when no chat is selected */}
-          {activeChat === 'private' && (
+          {activeChat?.startsWith('private') && (
             <>
-              {/* Private Rooms */}
+              {/* Private Rooms Header */}
               <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <h2 className="text-xl font-semibold text-gray-800">Private Messages</h2>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  {activeChat === 'private' ? 'Private Messages' : `Private Chat: ${activeChat.replace('private-', '')}`}
+                </h2>
               </div>
-              <div className="h-full p-4 overflow-y-auto">
-                {rooms.map((room) => (
-                  <div key={room.name} className="p-4 bg-gray-100 rounded-lg mb-4">
-                    <p className="font-semibold">{room.name}</p>
-                    <p className="text-sm text-gray-500">Last message: {room.room_type}</p>
+
+              {/* Two-column layout: Room list and Chat area */}
+              <div className="flex h-[calc(100%-130px)]">
+                {/* Room list sidebar */}
+                <div className="w-1/4 border-r border-gray-200 overflow-y-auto">
+                  {rooms.map((room) => (
+                    <div
+                      key={room.name}
+                      className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                      onClick={() => {
+                        // Fetch messages for this room when clicked
+                        fetchPrivateRoomMessages(room.name);
+                        setActiveChat(`private-${room.name}`);
+                      }}
+                    >
+                      <p className="font-semibold">{room.name}</p>
+                      <p className="text-sm text-gray-500">
+                        Participants: {room.participants.map(p => p.username).join(', ')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Chat area */}
+                <div className="w-3/4 flex flex-col">
+                  {/* Messages Area */}
+                  <div className="h-[calc(100%-80px)] p-4 overflow-y-auto">
+                    {messages.map((message, index) => (
+                      <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('user') ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-xs p-3 rounded-lg ${message.sender === localStorage.getItem('user') ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
+                          <p className="font-medium">{message.sender}</p>
+                          <p>{message.content}</p>
+                          <p className="text-xs mt-1">{message.timestamp}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
                   </div>
-                ))}
+
+                  {/* Message Input */}
+                  <motion.div
+                    className="p-4 border-t border-gray-200"
+                    whileHover={{ boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={message as string}
+                        onChange={handleChange}
+                        placeholder="Type your message..."
+                        onKeyDown={handdleKeyPress}
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      />
+                      <button
+                        className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+                        onClick={handleSentMessage}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </>
           )}
