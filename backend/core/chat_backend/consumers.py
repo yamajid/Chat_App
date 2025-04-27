@@ -9,10 +9,17 @@ from .models import Message, ChatRoom
 from .serializers import MessageSerializers
 
 User = get_user_model()
+priv_active_connections = []
+gene_active_connections = []
 
 class GeneralChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
+        user = self.scope['user']
+        if user.is_anonymous:
+            await self.accept()
+            await self.close(code=4008)
+            return
         self.room_group_name = "general"
         self.room_group_name = f'chat_{self.room_group_name}' 
         await self.accept()
@@ -22,9 +29,12 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
         ) 
 
     async def disconnect(self, close_code):
-        await self.close()
         # Your disconnection logic here
-        print("diconection")
+        await self.channel_layer.group_discard(
+            self.room_group_name,
+            self.channel_name
+        )
+        await self.close()
 
         pass
 
@@ -59,30 +69,42 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         message = event["message"]
-        # if self.channel_name != event["sender_channel_name"]:
         await self.send(text_data=json.dumps({"message": message}))
+
 
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        user = self.scope['user']
+        if user.is_anonymous:
+            await self.accept()
+            await self.close(code=4008)
+            return
+        print(user)
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'private_{self.room_name}'
         
         # Verify user has permission to join this room
-        if await self.verify_user_permission():
-            await self.channel_layer.group_add(
-                self.room_group_name,
-                self.channel_name
-            )
-            await self.accept()
-        else:
-            await self.close()
+        if self.user not in self.priv_active_connections:
+            if await self.verify_user_permission():
+                await self.channel_layer.group_add(
+                    self.room_group_name,
+                    self.channel_name
+                )
+                self.priv_active_connections.append(self.user)
+                await self.accept()
+            else:
+                await self.close()
 
     async def disconnect(self):
+        print("diconection")
+        await self.priv_active_connections.remove(self.user)
+        print(self.user)
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
+        await self.close()
 
     async def receive(self, text_data):
         data = json.loads(text_data)

@@ -304,7 +304,7 @@ function Dashboard({ onLogout }: any) {
   };
 
   const handlePrivateConnection = async (room_name: string) => {
-    const ws = new WebSocket(`ws://localhost:8000/ws/chat/?room_name=${room_name}`)
+    const ws = new WebSocket(`ws://localhost:8000/ws/chat/private/${room_name}/`)
 
     ws.onopen = () => {
       console.log('WebSocket connection established')
@@ -317,6 +317,7 @@ function Dashboard({ onLogout }: any) {
       setReady((prev) => !prev)
       console.log(data);
     }
+    // if (!ws)
     setSocket(ws)
   }
 
@@ -325,8 +326,10 @@ function Dashboard({ onLogout }: any) {
       const response = await axiosInstance.get(`http://localhost:8000/api/room/?username=${username}`);
 
       if (response.data.room && response.data.messages) {
+        const room_name = response.data.room.name; 
         setMessages(response.data.messages);
-        await handlePrivateConnection(response.data.room.name)
+        // if ()
+        await handlePrivateConnection(room_name)
         return response.data.room;
       }
     } catch (error: any) {

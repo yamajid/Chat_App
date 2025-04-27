@@ -60,7 +60,6 @@ class FetchRoom(APIView):
             room = ChatRoom.objects.filter(
                 room_type="private"
             ).filter(name=room_name).first()
-            print(room)
             if not room:
                 return Response({"No matched room available"}, status=status.HTTP_404_NOT_FOUND)
             messages = Message.objects.filter(room=room).order_by("timestamp")
