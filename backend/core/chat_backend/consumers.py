@@ -9,29 +9,33 @@ from .models import Message, ChatRoom
 from .serializers import MessageSerializers
 
 User = get_user_model()
-priv_active_connections = []
-gene_active_connections = []
+priv_active_connections = set()
+gene_active_connections = set()
 
 class GeneralChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        user = self.scope['user']
-        if user.is_anonymous:
+        self.user = self.scope['user']
+        if self.user.is_anonymous:
             await self.accept()
             await self.close(code=4008)
             return
-        self.room_group_name = "general"
-        self.room_group_name = f'chat_{self.room_group_name}' 
-        await self.accept()
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        ) 
+        self.room_name = "general"
+        if not self.user in gene_active_connections:
+            self.room_group_name = self.room_name
+            self.room_group_name = f'chat_{self.room_group_name}' 
+            gene_active_connections.add(self.user)
+            print(gene_active_connections)
+            await self.accept()
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            ) 
 
     async def disconnect(self, close_code):
-        # Your disconnection logic here
+        gene_active_connections.discard(self.user)
         await self.channel_layer.group_discard(
-            self.room_group_name,
+            self.room_name,
             self.channel_name
         )
         await self.close()
@@ -75,31 +79,29 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        user = self.scope['user']
-        if user.is_anonymous:
+        self.user = self.scope['user']
+        if self.user.is_anonymous:
             await self.accept()
             await self.close(code=4008)
             return
-        print(user)
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = f'private_{self.room_name}'
         
         # Verify user has permission to join this room
-        if self.user not in self.priv_active_connections:
+        print("private", priv_active_connections)
+        if self.user not in priv_active_connections:
+            priv_active_connections.add(self.user)
             if await self.verify_user_permission():
                 await self.channel_layer.group_add(
                     self.room_group_name,
                     self.channel_name
                 )
-                self.priv_active_connections.append(self.user)
                 await self.accept()
             else:
                 await self.close()
 
-    async def disconnect(self):
-        print("diconection")
-        await self.priv_active_connections.remove(self.user)
-        print(self.user)
+    async def disconnect(self, close_code):
+        priv_active_connections.discard(self.user)
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -108,8 +110,8 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
+        
         message = {
-            "type": "private",
             "room": self.room_name,
             "sender": data["sender"],
             "content": data["content"],
@@ -117,6 +119,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         }
         
         await self.save_message(message)
+        print(message)
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -131,16 +134,21 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_message(self, message):
-        serializer = MessageSerializers(data=message)
-        if serializer.is_valid():
+        try:
+            room = ChatRoom.objects.get(name=self.room_name)
+            message['room'] = room.id
+            serializer = MessageSerializers(data=message)
+            serializer.is_valid(raise_exception=True)
             serializer.save()
+        except Exception as e:
+            print(str(e))
 
     @database_sync_to_async
     def verify_user_permission(self):
         """Check if user is a participant of this private room"""
         user = self.scope["user"]
         try:
-            room = ChatRoom.objects.get(
+            ChatRoom.objects.get(
                 name=self.room_name,
                 participants=user
             )

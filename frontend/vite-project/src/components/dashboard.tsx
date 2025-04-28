@@ -13,6 +13,7 @@ function Dashboard({ onLogout }: any) {
   const [ready, setReady] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [privSocket, setPrivSocket] = useState<WebSocket | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [notifications, setNotification] = useState<any[]>([])
   const [showNotificationPopup, setShowNotificationPopup] = useState(false);
@@ -22,7 +23,7 @@ function Dashboard({ onLogout }: any) {
 
 
   interface Message {
-    room: number,
+    room: string,
     sender: string,
     content: string,
     timestamp: string,
@@ -115,9 +116,11 @@ function Dashboard({ onLogout }: any) {
     const ws = new WebSocket('ws://localhost:8000/ws/chat/')
 
     ws.onopen = () => {
+      setSocket(ws)
       console.log('WebSocket connection established')
     }
     ws.onclose = () => {
+      setSocket(null)
       console.log('WebSocket connection closed')
     }
     ws.onmessage = (event) => {
@@ -125,8 +128,6 @@ function Dashboard({ onLogout }: any) {
       setReady((prev) => !prev)
       console.log(data);
     }
-    setSocket(ws)
-
   }
 
 
@@ -135,30 +136,20 @@ function Dashboard({ onLogout }: any) {
     const id = localStorage.getItem("user");
     if (!id)
       return;
-    if (socket) {
-      const message_data = {
-        content: message,
-        sender: id
-      }
-      // setMessage()
-      socket.send(JSON.stringify(message_data))
+    const messageData = {
+      content: message,
+      sender: id
+    }
 
+    if (activeChat === 'general' && socket?.OPEN) {
+      socket.send(JSON.stringify(messageData));
+    } 
+    else if (activeChat?.startsWith('private') && privSocket?.OPEN) {
+      privSocket.send(JSON.stringify(messageData));
     }
-    else if (activeChat?.startsWith('private-')) {
-      const roomName = activeChat.replace('private-', '');
-      // Send private message to the backend
-      axiosInstance.post('/api/send-private-message/', {
-        room: roomName,
-        content: message,
-        sender: id
-      }).then(() => {
-        // Refresh messages after sending
-        fetchPrivateRoomMessages(roomName);
-      });
-    }
+    
     setMessage('');
   }
-
 
   const handleCreateNewRoom = async () => {
     setShowUserModal(true)
@@ -188,8 +179,8 @@ function Dashboard({ onLogout }: any) {
     }
   }
   useEffect(() => {
-    console.log(users); // Logs the updated users state whenever it changes
-  }, [users]);
+    console.log("userrrrrrrrrrrrr", users); // Logs the updated users state whenever it changes
+  }, [users, messages]);
 
   const handdleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -201,8 +192,7 @@ function Dashboard({ onLogout }: any) {
   const handlePrivate = async () => {
 
     setActiveChat('private')
-
-    // useEffect(() => {
+    setMessages([])
     const fetchRooms = async () => {
       const client = localStorage.getItem("user")
       try {
@@ -229,12 +219,16 @@ function Dashboard({ onLogout }: any) {
       }
     };
     fetchRooms();
-    // }, [activeChat]);
   }
 
   useEffect(() => {
-    if (activeChat == 'private' && socket) {
+    if (activeChat !== 'general' && socket?.OPEN) {
       socket.close()
+      setSocket(null)
+    }
+    else if (activeChat === 'general' && privSocket?.OPEN){
+      privSocket.close()
+      setPrivSocket(null);
     }
   }, [activeChat])
 
@@ -304,23 +298,31 @@ function Dashboard({ onLogout }: any) {
   };
 
   const handlePrivateConnection = async (room_name: string) => {
+    // setMessages([]);
+    if (privSocket?.OPEN){
+      privSocket.close()
+      setPrivSocket(null)
+    }
+
     const ws = new WebSocket(`ws://localhost:8000/ws/chat/private/${room_name}/`)
 
     ws.onopen = () => {
+      setPrivSocket(ws)
       console.log('WebSocket connection established')
     }
     ws.onclose = () => {
+      setPrivSocket(null)
       console.log('WebSocket connection closed')
     }
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
       setReady((prev) => !prev)
-      console.log(data);
+      setMessages(prev => [...prev, data.message])
+      console.log("messages::::::::::::", messages)
     }
-    // if (!ws)
-    setSocket(ws)
   }
 
+    
   const fetchPrivateRoomMessages = async (username: string) => {
     try {
       const response = await axiosInstance.get(`http://localhost:8000/api/room/?username=${username}`);
