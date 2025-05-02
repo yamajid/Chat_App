@@ -2,27 +2,28 @@ import axiosInstance from './axios';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 
-function Login({onLogin}: any) {
-  
+function Login({ onLogin }: any) {
+
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
-  
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await axiosInstance.post('http://localhost:8000/api/user/login',{
-        'username' : formData.username,
-        'password' : formData.password
+    const response = await axiosInstance.post('http://localhost:8000/api/user/login', {
+      'username': formData.username,
+      'password': formData.password
     });
-    if (response.status == 200){
-        console.log(response.status);
-        localStorage.setItem('user', response.data.user)
-        onLogin()
+    if (response.status == 200) {
+      localStorage.setItem('user', response.data.id)
+      console.log("useranaaaaaaaam", response.data.username)
+      localStorage.setItem('username', response.data.username)
+      onLogin()
     }
-    
+
     console.log('Form submitted:', formData);
   };
 
@@ -44,7 +45,7 @@ function Login({onLogin}: any) {
           whileHover={{ y: -5 }}
           transition={{ type: 'spring', stiffness: 300 }}
         >
-          <motion.h2 
+          <motion.h2
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
@@ -69,9 +70,9 @@ function Login({onLogin}: any) {
                 value={formData.username}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                whileFocus={{ 
+                whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" 
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -92,9 +93,9 @@ function Login({onLogin}: any) {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                whileFocus={{ 
+                whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" 
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -108,11 +109,11 @@ function Login({onLogin}: any) {
               <motion.button
                 type="submit"
                 className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
                   background: "linear-gradient(to right, #2563eb, #4f46e5)"
                 }}
-                whileTap={{ 
+                whileTap={{
                   scale: 0.98,
                   background: "linear-gradient(to right, #1d4ed8, #4338ca)"
                 }}
@@ -120,6 +121,23 @@ function Login({onLogin}: any) {
               >
                 Sign In
               </motion.button>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-center mt-4"
+            >
+              <p className="text-sm text-gray-600">
+                Don't have an account?{' '}
+                <a
+                  href="/register"
+                  className="text-blue-600 hover:underline"
+                >
+                  Create Account
+                </a>
+              </p>
             </motion.div>
           </form>
         </motion.div>

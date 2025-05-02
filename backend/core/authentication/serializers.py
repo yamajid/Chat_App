@@ -10,7 +10,10 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password' ,'date_joined']
+        fields = ['username', 'email', 'password', 'date_joined', 'id']
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
     def validate_email(self, value):
         if not value:
@@ -21,8 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
     def validate_password(self, value):
         if not value:
             raise serializers.ValidationError('password is required')
-        if len(value) < 8:
-            raise serializers.ValidationError('Password must be at leat 8 char')
+        if len(value) < 8 or len(value) > 100:
+            raise serializers.ValidationError('Password is not correct')
         return value
     def validate_username(self, value):
         if not value:

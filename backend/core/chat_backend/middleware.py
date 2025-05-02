@@ -17,7 +17,6 @@ class JWTAuthMiddleware(BaseMiddleware):
         cookie_header = headers.get(b"cookie", b"").decode("utf-8")
         cookies = self.parse_cookies(cookie_header)
         
-        # Extract access token from the cookies (key: "access_token")
         access_token = cookies.get("access_token")
 
         if not access_token:
@@ -26,23 +25,18 @@ class JWTAuthMiddleware(BaseMiddleware):
         
         # print("user", access_token)
         try:
-            # Decode the token using your JWT settings
             decoded_token = jwt.decode(
                 access_token, 
                 settings.SECRET_KEY, 
                 algorithms=['HS256']
             )
             
-            # Get the user
             user = await self.get_user(decoded_token['user_id'])
             
-            # Attach user to scope
             scope['user'] = user
         except jwt.ExpiredSignatureError:
-            # Token has expired
             scope['user'] = AnonymousUser()
         except (jwt.InvalidTokenError, KeyError):
-            # Invalid token or missing user_id
             scope['user'] = AnonymousUser()
         
         return await super().__call__(scope, receive, send)

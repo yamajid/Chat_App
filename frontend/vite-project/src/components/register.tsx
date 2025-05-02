@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { useState , useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 
-function Register({onRegister}: any) {
+function Register({ onRegister }: any) {
   const navigate = useNavigate();
   const [navig, setNavig] = useState(false)
   const [formData, setFormData] = useState({
@@ -16,22 +16,22 @@ function Register({onRegister}: any) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await axios.post('http://127.0.0.1:8000/api/user/register', { 
-        'email': formData.email,
-        'username': formData.username,
-        'password' : formData.password
-     });
-    if (response.status == 201){
+    const response = await axios.post('http://127.0.0.1:8000/api/user/register', {
+      'email': formData.email,
+      'username': formData.username,
+      'password': formData.password
+    });
+    if (response.status == 201) {
       setNavig(true)
       onRegister();
     }
     console.log('Registration submitted:', formData);
   };
   useEffect(() => {
-    if (navig){
+    if (navig) {
 
       navigate('/login');
-      
+
     }
   }, [navig]);
 
@@ -53,7 +53,7 @@ function Register({onRegister}: any) {
           whileHover={{ y: -5 }}
           transition={{ type: 'spring', stiffness: 300 }}
         >
-          <motion.h2 
+          <motion.h2
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
@@ -78,9 +78,9 @@ function Register({onRegister}: any) {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                whileFocus={{ 
+                whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" 
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -101,9 +101,9 @@ function Register({onRegister}: any) {
                 value={formData.username}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                whileFocus={{ 
+                whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" 
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -124,9 +124,9 @@ function Register({onRegister}: any) {
                 value={formData.password}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                whileFocus={{ 
+                whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)" 
+                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -140,11 +140,11 @@ function Register({onRegister}: any) {
               <motion.button
                 type="submit"
                 className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-                whileHover={{ 
+                whileHover={{
                   scale: 1.02,
                   background: "linear-gradient(to right, #2563eb, #4f46e5)"
                 }}
-                whileTap={{ 
+                whileTap={{
                   scale: 0.98,
                   background: "linear-gradient(to right, #1d4ed8, #4338ca)"
                 }}
@@ -152,6 +152,23 @@ function Register({onRegister}: any) {
               >
                 Register
               </motion.button>
+            </motion.div>
+
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="text-center mt-4"
+            >
+              <p className="text-sm text-gray-600">
+                Already have an account?{' '}
+                <a
+                  href="/login"
+                  className="text-blue-600 hover:underline"
+                >
+                  Login
+                </a>
+              </p>
             </motion.div>
           </form>
         </motion.div>

@@ -25,7 +25,6 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name = self.room_name
             self.room_group_name = f'chat_{self.room_group_name}' 
             gene_active_connections.add(self.user)
-            print(gene_active_connections)
             await self.accept()
             await self.channel_layer.group_add(
                 self.room_group_name,
@@ -59,7 +58,6 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
                 {
                     "type": "chat_message",
                     "message": message,
-                    "sender": self.channel_name
                 }
             )
 
@@ -88,7 +86,6 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f'private_{self.room_name}'
         
         # Verify user has permission to join this room
-        print("private", priv_active_connections)
         if self.user not in priv_active_connections:
             priv_active_connections.add(self.user)
             if await self.verify_user_permission():
@@ -101,7 +98,9 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
                 await self.close()
 
     async def disconnect(self, close_code):
+        print(priv_active_connections)
         priv_active_connections.discard(self.user)
+        print(priv_active_connections)
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
@@ -113,12 +112,13 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         
         message = {
             "room": self.room_name,
-            "sender": data["sender"],
+            "sender": data["id"],
             "content": data["content"],
             "is_invitation": False
         }
         
         await self.save_message(message)
+        message["sender"] = data["sender"]
         print(message)
         await self.channel_layer.group_send(
             self.room_group_name,

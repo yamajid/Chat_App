@@ -19,6 +19,14 @@ function Dashboard({ onLogout }: any) {
   const [showNotificationPopup, setShowNotificationPopup] = useState(false);
 
 
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [formData, setFormData] = useState({
+    username: '',
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [updateError, setUpdateError] = useState('');
   //   const [formData, setFormData] = useState<string | null>(null);
 
 
@@ -43,17 +51,14 @@ function Dashboard({ onLogout }: any) {
   }
 
   interface Users {
-    id: number,
     username: string,
-    email: string,
-    date_joined: string
   }
 
 
   // Check auth status
   useEffect(() => {
-    const token = localStorage.getItem('user');
-    if (!token) navigate('/login');
+    const id = localStorage.getItem('user');
+    if (!id) navigate('/login');
   }, [navigate]);
   const handleLogout = async () => {
     const response = await axiosInstance.post('http://localhost:8000/api/user/logout');
@@ -86,7 +91,6 @@ function Dashboard({ onLogout }: any) {
           }
           if (response.data.messages && Array.isArray(response.data.messages)) {
             setMessages(response.data.messages); // Handle nested structure
-            console.log("message", messages)
           } else {
             console.error('Unexpected response format:', response.data);
           }
@@ -126,28 +130,29 @@ function Dashboard({ onLogout }: any) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
       setReady((prev) => !prev)
-      console.log(data);
     }
   }
 
 
   const handleSentMessage = () => {
     if (message?.trim() === '') return
+    const username = localStorage.getItem("username");
     const id = localStorage.getItem("user");
-    if (!id)
+    if (!username || !id)
       return;
     const messageData = {
       content: message,
-      sender: id
+      sender: id,
+      id : id
     }
-
+    
     if (activeChat === 'general' && socket?.OPEN) {
       socket.send(JSON.stringify(messageData));
-    } 
+    }
     else if (activeChat?.startsWith('private') && privSocket?.OPEN) {
       privSocket.send(JSON.stringify(messageData));
     }
-    
+
     setMessage('');
   }
 
@@ -179,8 +184,17 @@ function Dashboard({ onLogout }: any) {
     }
   }
   useEffect(() => {
-    console.log("userrrrrrrrrrrrr", users); // Logs the updated users state whenever it changes
-  }, [users, messages]);
+    const fetchNot = async () => {
+
+      const response = await axiosInstance.get('/api/notify/');
+      if (response.status === 200) {
+        setNotification(response.data.Invitations)
+        // setShowNotificationPopup(true);
+      }
+    }
+    fetchNot()
+    // console.log("userrrrrrrrrrrrr", users); // Logs the updated users state whenever it changes
+  }, [users, messages, notifications]);
 
   const handdleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
@@ -204,7 +218,6 @@ function Dashboard({ onLogout }: any) {
         });
         if (response.data.rooms && Array.isArray(response.data.rooms)) {
           setRooms(response.data.rooms);
-          console.log("message", response.data.rooms)
         } else {
           console.error('Unexpected response format:', response.data);
         }
@@ -226,7 +239,7 @@ function Dashboard({ onLogout }: any) {
       socket.close()
       setSocket(null)
     }
-    else if (activeChat === 'general' && privSocket?.OPEN){
+    else if (activeChat === 'general' && privSocket?.OPEN) {
       privSocket.close()
       setPrivSocket(null);
     }
@@ -264,7 +277,6 @@ function Dashboard({ onLogout }: any) {
     if (response.status === 200) {
       setNotification(response.data.Invitations)
       setShowNotificationPopup(true);
-      console.log(notifications)
     }
 
   };
@@ -298,8 +310,7 @@ function Dashboard({ onLogout }: any) {
   };
 
   const handlePrivateConnection = async (room_name: string) => {
-    // setMessages([]);
-    if (privSocket?.OPEN){
+    if (privSocket?.OPEN) {
       privSocket.close()
       setPrivSocket(null)
     }
@@ -318,19 +329,17 @@ function Dashboard({ onLogout }: any) {
       const data = JSON.parse(event.data)
       setReady((prev) => !prev)
       setMessages(prev => [...prev, data.message])
-      console.log("messages::::::::::::", messages)
     }
   }
 
-    
+
   const fetchPrivateRoomMessages = async (username: string) => {
     try {
       const response = await axiosInstance.get(`http://localhost:8000/api/room/?username=${username}`);
 
       if (response.data.room && response.data.messages) {
-        const room_name = response.data.room.name; 
+        const room_name = response.data.room.name;
         setMessages(response.data.messages);
-        // if ()
         await handlePrivateConnection(room_name)
         return response.data.room;
       }
@@ -341,6 +350,33 @@ function Dashboard({ onLogout }: any) {
       console.error('Error fetching private room:', error);
     }
   };
+
+
+  const handleUpdateInfo = async (e: any) => {
+    e.preventDefault();
+    try {
+      if (formData.newPassword !== formData.confirmPassword) {
+        setUpdateError("New passwords don't match");
+        return;
+      }
+
+      const response = await axiosInstance.post('/api/user/update', {
+        info : {
+          username: formData.username,
+          current_password: formData.currentPassword,
+          new_password: formData.newPassword
+        }
+      });
+
+      if (response.status === 200) {
+        setShowUpdateForm(false);
+        // Optionally show success message
+      }
+    } catch (error: any) {
+      setUpdateError(error.response?.data?.message || "Failed to update profile");
+    }
+
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -387,7 +423,9 @@ function Dashboard({ onLogout }: any) {
           >
             Create New Room
           </button>
-          <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100">
+          <button className="w-full text-left p-3 rounded-lg hover:bg-gray-100"
+            onClick={() => setShowUpdateForm(true)}
+          >
             Settings
           </button>
           <button
@@ -407,6 +445,115 @@ function Dashboard({ onLogout }: any) {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl shadow-xl h-[calc(100vh-4rem)] overflow-hidden"
         >
+          {/* Add this state near your other state declarations */}
+
+          {/* Add this form component where you want it to appear */}
+          {showUpdateForm && (
+            <motion.div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white rounded-xl p-6 w-96"
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-indigo-600">Update Profile</h2>
+                  <button
+                    onClick={() => setShowUpdateForm(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {updateError && (
+                  <motion.div
+                    className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    {updateError}
+                  </motion.div>
+                )}
+
+                <form onSubmit={handleUpdateInfo}>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Username</label>
+                      <input
+                        type="text"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter new username"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                      <input
+                        type="password"
+                        value={formData.currentPassword}
+                        onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter current password"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                      <input
+                        type="password"
+                        value={formData.newPassword}
+                        onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter new password"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                      <input
+                        type="password"
+                        value={formData.confirmPassword}
+                        onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <motion.button
+                      type="button"
+                      onClick={() => setShowUpdateForm(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Cancel
+                    </motion.button>
+                    <motion.button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Update
+                    </motion.button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
           {activeChat === 'general' && (
             <>
               {/* Chat Header */}
@@ -453,7 +600,7 @@ function Dashboard({ onLogout }: any) {
               </motion.div>
             </>
           )}
-          {showNotificationPopup && (
+          { showNotificationPopup && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <motion.div
                 className="bg-white rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto"
@@ -521,7 +668,7 @@ function Dashboard({ onLogout }: any) {
                   {rooms.map((room) => (
                     <div
                       key={room.name}
-                      className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+                      className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-300"
                       onClick={() => {
                         // Fetch messages for this room when clicked
                         fetchPrivateRoomMessages(room.name);
@@ -529,9 +676,6 @@ function Dashboard({ onLogout }: any) {
                       }}
                     >
                       <p className="font-semibold">{room.name}</p>
-                      <p className="text-sm text-gray-500">
-                        Participants: {room.participants.map(p => p.username).join(', ')}
-                      </p>
                     </div>
                   ))}
                 </div>
@@ -541,8 +685,8 @@ function Dashboard({ onLogout }: any) {
                   {/* Messages Area */}
                   <div className="h-[calc(100%-80px)] p-4 overflow-y-auto">
                     {messages.map((message, index) => (
-                      <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('user') ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs p-3 rounded-lg ${message.sender === localStorage.getItem('user') ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
+                      <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-xs p-3 rounded-lg ${message.sender === localStorage.getItem('username') ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
                           <p className="font-medium">{message.sender}</p>
                           <p>{message.content}</p>
                           <p className="text-xs mt-1">{message.timestamp}</p>
@@ -587,15 +731,33 @@ function Dashboard({ onLogout }: any) {
                 <div className="space-y-4">
                   {/* Replace this hardcoded list with a dynamic list fetched from the backend */}
                   {users.map((user) => (
-                    <div key={user.id} className="flex justify-between items-center">
+                    <div key={user.username} className="flex justify-between items-center">
                       <p className="text-sm">{user.username}</p>
-                      <button
+                      <motion.button
                         className="bg-indigo-600 text-white rounded-lg px-3 py-1 hover:bg-indigo-700"
-                        onClick={() => handleNotify(user.username)} // Replace with actual invite logic
-
+                        onClick={() => handleNotify(user.username)}
+                        whileHover={{
+                          scale: 1.05,
+                          boxShadow: "0 4px 8px rgba(99, 102, 241, 0.3)"
+                        }}
+                        whileTap={{
+                          scale: 0.95,
+                          backgroundColor: "#4338CA" // indigo-700
+                        }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 10
+                        }}
                       >
-                        Notify
-                      </button>
+                        <motion.span
+                          initial={{ opacity: 1 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          Notify
+                        </motion.span>
+                      </motion.button>
                     </div>
                   ))}
                 </div>

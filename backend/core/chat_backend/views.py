@@ -46,7 +46,8 @@ class FetchUsers(APIView):
             id = request.GET.get("id")
             users = User.objects.exclude(id=id)
             serializer = UserSerializer(users, many=True)
-            return Response({"users": serializer.data}, status=status.HTTP_200_OK)
+            print(serializer.data)
+            return Response({"users":  serializer.data}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response({"Not found"}, status=status.HTTP_404_NOT_FOUND)
