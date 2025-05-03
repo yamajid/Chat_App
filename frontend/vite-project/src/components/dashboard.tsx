@@ -184,15 +184,15 @@ function Dashboard({ onLogout }: any) {
     }
   }
   useEffect(() => {
-    const fetchNot = async () => {
+    // const fetchNot = async () => {
 
-      const response = await axiosInstance.get('/api/notify/');
-      if (response.status === 200) {
-        setNotification(response.data.Invitations)
-        // setShowNotificationPopup(true);
-      }
-    }
-    fetchNot()
+    //   // const response = await axiosInstance.get('/api/notify/');
+    //   // if (response.status === 200) {
+    //   //   setNotification(response.data.Invitations)
+    //   //   // setShowNotificationPopup(true);
+    //   // }
+    // }
+    // fetchNot()
     // console.log("userrrrrrrrrrrrr", users); // Logs the updated users state whenever it changes
   }, [users, messages, notifications]);
 

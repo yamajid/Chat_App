@@ -52,6 +52,7 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
                 "content" : data["content"],
                 "is_invitation" : False
             }
+            print("general messageeeeeeee: ", message)
             await self.savemessage(message)
             await self.channel_layer.group_send(
                 self.room_group_name,
@@ -119,7 +120,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         
         await self.save_message(message)
         message["sender"] = data["sender"]
-        print(message)
+        print("private messageeeeeeee: ", message)
         await self.channel_layer.group_send(
             self.room_group_name,
             {
