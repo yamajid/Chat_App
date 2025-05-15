@@ -1,7 +1,12 @@
-FROM redis:7
+FROM debian:11
+
+RUN apt update && apt upgrade -y && apt install -y redis-server
+
+COPY script.sh .
+
+RUN chmod +x script.sh
 
 
-EXPOSE  6379
+EXPOSE 6379
 
-
-CMD ["redis-server"]
+CMD ["bash", "script.sh"]
