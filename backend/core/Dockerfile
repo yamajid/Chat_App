@@ -2,8 +2,10 @@ FROM    python:3.11-slim
 
 WORKDIR /app
 
-COPY    .  .
+COPY    .  /
 
-RUN     chmod +x ./script.sh
+RUN     chmod +x /script.sh
 
-CMD    ["sh", "./script.sh"]
+EXPOSE  8000
+
+CMD    ["sh", "/script.sh"]
