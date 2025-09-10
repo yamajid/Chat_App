@@ -11,6 +11,7 @@ const axiosInstance = axios.create({
     withCredentials:true,
 })
 
+export default axiosInstance;
 
 axiosInstance.interceptors.request.use(
   config => {
@@ -28,12 +29,11 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-export default axiosInstance;
 
 
 export  async function refreshAuthToken() {
   try {
-    const response = await axiosInstance.post(`http://localhost:8000/api/user/refresh`);
+    const response = await axiosInstance.post(`/api/user/refresh`);
     if (response.status !== 200)
       throw Error
     axiosInstance.defaults.headers['Authorization'] = `Bearer ${Cookies.get('access_token')}`;
