@@ -25,13 +25,10 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 CORS_ALLOW_CREDENTIALS = True
 # CORS_ORIGIN_ALLOW_ALL = False
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Or any frontend domain
-    "ws://localhost:5173",  # Or any frontend domain
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ASGI_APPLICATION = 'core.asgi.application'
 
