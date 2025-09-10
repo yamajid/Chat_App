@@ -7,8 +7,8 @@ services:
         build:
           context: ./frontend/vite_project
         restart:  unless-stopped
-        volumes:
-          - ./frontend/app:/app
+        # volumes:
+        #   - ./frontend/app:/app
         ports:
           - "5173:5173"
         env_file:
@@ -20,8 +20,8 @@ services:
         build:
           context: ./backend/core
         restart: unless-stopped
-        volumes:
-          - ./backend/app:/app
+        # volumes:
+        #   - ./backend/app:/app
         ports:
           - 8000:8000
         env_file:
@@ -30,10 +30,10 @@ services:
     redis:
         container_name: redis
         build: ./deployment/redis
-        volumes:
-          - ./redis-logs:/data
+        # volumes:
+        #   - ./redis-logs:/data
         ports:
-          - "6379:6379"
+          - "6380:6379"
         restart: unless-stopped
 
     nginx:
@@ -41,12 +41,12 @@ services:
         build:
           context: ./deployment/nginx
         restart: unless-stopped
-        volumes:
-          - ./nginx-logs:/var/log/nginx/
+        # volumes:
+        #   - ./nginx-logs:/var/log/nginx/
         env_file:
           - .env
         depends_on:
           - frontend
           - backend
         ports:
-          - "443:443"
+          - "8443:443"

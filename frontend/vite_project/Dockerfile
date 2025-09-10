@@ -1,10 +1,11 @@
 FROM    node:20
 
+WORKDIR /app
 
-COPY    . /
+COPY    . .
 
-RUN     chmod +x /script.sh
+RUN     chmod +x script.sh
 
 EXPOSE  5173
 
-CMD ["sh", "/script.sh"]
+CMD ["sh", "script.sh"]

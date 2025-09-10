@@ -1,4 +1,6 @@
 
 #!/bin/sh
 
-npm install && npm i -g serve && npm run build && serve -s dist -l 0.0.0.0:5173
+cd /app
+
+npm install &&  npm run dev -- --host 0.0.0.0 --port 5173
