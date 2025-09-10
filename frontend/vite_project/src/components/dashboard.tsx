@@ -61,7 +61,7 @@ function Dashboard({ onLogout }: any) {
     if (!id) navigate('/login');
   }, [navigate]);
   const handleLogout = async () => {
-    const response = await axiosInstance.post('http://localhost:8000/api/user/logout');
+    const response = await axiosInstance.post('/api/user/logout');
     if (response.status === 200) {
       localStorage.removeItem('user');
       onLogout();
@@ -81,7 +81,7 @@ function Dashboard({ onLogout }: any) {
       const fetchMessages = async () => {
         try {
 
-          const response = await axiosInstance.get('http://localhost:8000/api/general/', {
+          const response = await axiosInstance.get('/api/general/', {
             params: {
               room_name: 'general'
             }
@@ -117,7 +117,7 @@ function Dashboard({ onLogout }: any) {
 
   const handelJoinGene = () => {
     setActiveChat('general');
-    const ws = new WebSocket('ws://localhost:8000/ws/chat/')
+    const ws = new WebSocket('/ws/chat/')
 
     ws.onopen = () => {
       setSocket(ws)
@@ -161,7 +161,7 @@ function Dashboard({ onLogout }: any) {
     const id = localStorage.getItem("user")
     try {
 
-      const response = await axiosInstance.get("http://localhost:8000/api/users/", {
+      const response = await axiosInstance.get("/api/users/", {
         params: {
           id: id
         }
@@ -210,7 +210,7 @@ function Dashboard({ onLogout }: any) {
       const client = localStorage.getItem("user")
       try {
 
-        const response = await axiosInstance.get('http://localhost:8000/api/rooms/', {
+        const response = await axiosInstance.get('/api/rooms/', {
           params: {
             username: client
           }
@@ -247,7 +247,7 @@ function Dashboard({ onLogout }: any) {
   const handleNotify = async (username: string) => {
     try {
 
-      const response = await axiosInstance.post(`http://localhost:8000/api/invite/?username=${username}`, {
+      const response = await axiosInstance.post(`/api/invite/?username=${username}`, {
 
         inviter: '',
         invitee: username,
@@ -314,7 +314,7 @@ function Dashboard({ onLogout }: any) {
       setPrivSocket(null)
     }
 
-    const ws = new WebSocket(`ws://localhost:8000/ws/chat/private/${room_name}/`)
+    const ws = new WebSocket(`/ws/chat/private/${room_name}/`)
 
     ws.onopen = () => {
       setPrivSocket(ws)
@@ -326,7 +326,7 @@ function Dashboard({ onLogout }: any) {
     }
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      setReady((prev) => !prev)
+      setReady((prev: any) => !prev)
       setMessages(prev => [...prev, data.message])
     }
   }
@@ -334,7 +334,7 @@ function Dashboard({ onLogout }: any) {
 
   const fetchPrivateRoomMessages = async (username: string) => {
     try {
-      const response = await axiosInstance.get(`http://localhost:8000/api/room/?username=${username}`);
+      const response = await axiosInstance.get(`/api/room/?username=${username}`);
 
       if (response.data.room && response.data.messages) {
         const room_name = response.data.room.name;

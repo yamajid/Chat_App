@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from './axios';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,7 @@ function Register({ onRegister }: any) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await axios.post('http://127.0.0.1:8000/api/user/register', {
+    const response = await axiosInstance.post('/api/user/register', {
       'email': formData.email,
       'username': formData.username,
       'password': formData.password
