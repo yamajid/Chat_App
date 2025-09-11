@@ -57,6 +57,21 @@ cd Chat_App
 # Start the application
 make up
 ```
-### The app will be available at::
-- 
+### The app will be available at:
+- Frontend → https://localhost
+- Backend API → https://localhost/api/
+- WebSockets → wss://localhost/ws/
+
+### Useful Commands
+```
+make ps            # List running containers
+make down          # Stop and remove containers
+make shell-backend # Access Django backend shell
+make shell-frontend# Access React frontend shell
+make shell-nginx   # Access NGINX shell
+make shell-redis   # Access Redis shell
+make clean         # Remove containers, volumes, networks
+make fclean        # Full cleanup (Docker system prune)
+
+```
 
