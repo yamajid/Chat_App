@@ -72,8 +72,8 @@ make shell-nginx   # Access NGINX shell
 make shell-redis   # Access Redis shell
 make clean         # Remove containers, volumes, networks
 make fclean        # Full cleanup (Docker system prune)
-
-
+```
+```
 ## 🎯 Usage
 
 1. **Access the Application**
@@ -105,7 +105,6 @@ make fclean        # Full cleanup (Docker system prune)
 
 ```
 
-Do you want me to also add a **section for environment variables** (like `SECRET_KEY`, `DB_NAME`, etc.), or should we keep this README minimal and focused on `make up`?
-```
+
 
 
