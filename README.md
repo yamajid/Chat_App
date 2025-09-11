@@ -32,8 +32,8 @@ The app is fully containerized with **Docker Compose** and uses **NGINX** as a r
 
 ### Frontend Development
 - **Framework**: React.js + TypeScript  
-- **Styling**: Modern CSS / Tailwind (if enabled)  
-- **State Management**: React Context / Redux (depending on branch)  
+- **Styling**: Modern CSS / Tailwind 
+- **State Management**: React Context 
 - **API Communication**: Axios with centralized instance  
 
 ### DevOps & Deployment
@@ -49,5 +49,12 @@ The app is fully containerized with **Docker Compose** and uses **NGINX** as a r
 ```bash
 # Required installations
 - Docker & Docker Compose
-- Node.js (v16+)
-- Python (3.9+)
+
+### Instalation Steps
+# Clone the repository
+git clone https://github.com/yamajid/Chat_App.git
+cd Chat_App
+
+# Start the application
+make up
+
