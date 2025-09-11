@@ -1,180 +1,53 @@
+# 💬 Chat App
 
-
-```markdown
-# 🗨️ Chat_App
-
-A full-stack real-time chat application built with **React (frontend)**, **Django/DRF (backend)**, and **nginx** for reverse proxying. The project is fully containerized with **Docker Compose** for easy development and deployment.
-
----
-
-## 🚀 Features
-
-- 🔐 User registration and login  
-- ⚡ JWT authentication with refresh tokens  
-- 💬 Real-time chat via WebSockets  
-- 🐳 Dockerized frontend, backend, and nginx  
-- 🌐 nginx reverse proxy for `/api/` and `/ws/`  
-- 🗄️ Easy local setup using `docker-compose`  
+## Overview
+A real-time chat application built with **Django REST Framework** and **React.js**, enabling secure authentication, persistent chat rooms, and instant communication powered by **WebSockets**.  
+The app is fully containerized with **Docker Compose** and uses **NGINX** as a reverse proxy.
 
 ---
 
-## 📂 Project Structure
+## 🌟 Key Features
 
-```
+### 💬 Chat Features
+- **Real-Time Messaging**: Powered by WebSockets for instant communication  
+- **Private & Group Chats**: Connect with individuals or multiple users  
+- **Persistent Conversations**: Messages are stored in the database  
+- **Notifications**: Get notified when new messages arrive  
 
-Chat\_App/
-├── backend/            # Django REST backend (API, auth, chat)
-├── frontend/           # React + TypeScript frontend
-├── nginx.conf          # nginx reverse proxy config
-├── docker-compose.yml  # Docker Compose definition
-├── Dockerfile(s)       # Container definitions
-└── README.md
-
-````
-
----
-
-## 🛠️ Prerequisites
-
-- [Docker](https://docs.docker.com/get-docker/)  
-- [Docker Compose](https://docs.docker.com/compose/)  
+### 👤 User Features
+- **JWT Authentication**: Secure login with refresh tokens  
+- **User Registration & Login**: Simple onboarding flow  
+- **Profile Management**: Manage account details  
+- **Session Handling**: Automatic token refresh for smoother experience  
 
 ---
 
-## ⚡ Quick Start
+## 🛠 Technology Stack
 
-Clone the repo and bring up the stack:
+### Backend Infrastructure
+- **Framework**: Django & Django REST Framework  
+- **Real-Time**: Django Channels (WebSockets)  
+- **Authentication**: JWT (access & refresh tokens)  
+- **Database**: PostgreSQL  
 
+### Frontend Development
+- **Framework**: React.js + TypeScript  
+- **Styling**: Modern CSS / Tailwind (if enabled)  
+- **State Management**: React Context / Redux (depending on branch)  
+- **API Communication**: Axios with centralized instance  
+
+### DevOps & Deployment
+- **Containerization**: Docker & Docker Compose  
+- **Web Server**: NGINX (Reverse Proxy + SSL termination)  
+- **Certificates**: Self-signed (dev) / Let’s Encrypt (prod-ready)  
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
 ```bash
-git clone https://github.com/yamajid/Chat_App.git
-cd Chat_App
-docker-compose up --build
-````
-
-Then open:
-
-* Frontend → [http://localhost](http://localhost)
-* API backend → [http://localhost:8000/api/](http://localhost:8000/api/)
-* WebSockets → \[ws\://localhost/ws/]
-
-Stop everything:
-
-```bash
-docker-compose down
-```
-
----
-
-## 🔧 Configuration
-
-Environment variables can be set in your `.env` file or passed in `docker-compose.yml`.
-
-| Variable      | Default      | Description       |
-| ------------- | ------------ | ----------------- |
-| `SECRET_KEY`  | required     | Django secret key |
-| `DEBUG`       | `True` (dev) | Django debug mode |
-| `DB_HOST`     | `db`         | Database hostname |
-| `DB_PORT`     | `5432`       | Database port     |
-| `DB_NAME`     | `chatapp`    | Database name     |
-| `DB_USER`     | `chatuser`   | Database user     |
-| `DB_PASSWORD` | `password`   | Database password |
-
----
-
-## ⚙️ Development
-
-### Run backend locally
-
-```bash
-cd backend
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
-```
-
-### Run frontend locally
-
-```bash
-cd frontend
-npm install
-npm run dev -- --host 0.0.0.0
-```
-
-Update Axios `baseURL` to `http://localhost:8000/api`.
-
----
-
-## 🌐 nginx Reverse Proxy
-
-The included `nginx.conf` routes:
-
-* `/` → React frontend (Vite)
-* `/api/` → Django backend (REST API)
-* `/ws/` → Django Channels (WebSocket server)
-
----
-
-## 🧪 Testing
-
-### Backend tests
-
-```bash
-cd backend
-pytest
-```
-
-### Frontend tests
-
-```bash
-cd frontend
-npm test
-```
-
----
-
-## 🐳 Deployment
-
-For production:
-
-1. Configure proper environment variables.
-2. Replace self-signed SSL with real certificates (e.g. Let’s Encrypt).
-3. Run with detached mode:
-
-```bash
-docker-compose up -d --build
-```
-
----
-
-## 🚧 Common Issues
-
-* **Mixed Content errors** → Make sure both frontend and backend use the same protocol (`http` or `https`).
-* **CORS errors** → Add frontend URL to Django `CORS_ALLOWED_ORIGINS`.
-* **Invalid token** → Refresh JWT tokens properly with `/api/user/refresh`.
-
----
-
-## 📜 License
-
-This project is open-source under the MIT License.
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/foo`)
-3. Commit your changes (`git commit -m 'Add feature foo'`)
-4. Push to the branch (`git push origin feature/foo`)
-5. Open a Pull Request
-
----
-
-## 👤 Author
-
-Developed by **[Younes Amajid](https://github.com/yamajid)** at 1337 coding school.
-
-```
-
-Do you also want me to include **usage examples with screenshots (like chat UI previews)** inside this README, or keep it purely text-based?
-```
+# Required installations
+- Docker & Docker Compose
+- Node.js (v16+)
+- Python (3.9+)
