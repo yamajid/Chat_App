@@ -73,5 +73,39 @@ make shell-redis   # Access Redis shell
 make clean         # Remove containers, volumes, networks
 make fclean        # Full cleanup (Docker system prune)
 
+
+## 🎯 Usage
+
+1. **Access the Application**
+
+   * Open [https://localhost](https://localhost) in your browser
+   * Register or log in to start chatting
+
+2. **Chat in Real-Time**
+
+   * Join or create chat rooms
+   * Exchange messages instantly with WebSockets
+
+3. **Manage Your Profile**
+
+   * Update personal information
+   * View chat history
+
+---
+
+## 👥 Contributors
+
+* @yamajid
+
+---
+
+## ⏰ Last Updated
+
+* Maintainer: @yamajid
+
 ```
+
+Do you want me to also add a **section for environment variables** (like `SECRET_KEY`, `DB_NAME`, etc.), or should we keep this README minimal and focused on `make up`?
+```
+
 
