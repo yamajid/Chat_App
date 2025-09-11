@@ -51,10 +51,11 @@ The app is fully containerized with **Docker Compose** and uses **NGINX** as a r
 - Docker & Docker Compose
 
 ### Instalation Steps
-# Clone the repository
 git clone https://github.com/yamajid/Chat_App.git
 cd Chat_App
 
 # Start the application
 make up
+```
+- The app will be available at:
 
