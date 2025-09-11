@@ -73,7 +73,7 @@ make shell-redis   # Access Redis shell
 make clean         # Remove containers, volumes, networks
 make fclean        # Full cleanup (Docker system prune)
 ```
-```
+
 ## 🎯 Usage
 
 1. **Access the Application**
@@ -103,7 +103,6 @@ make fclean        # Full cleanup (Docker system prune)
 
 * Maintainer: @yamajid
 
-```
 
 
 
