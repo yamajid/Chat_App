@@ -117,7 +117,7 @@ function Dashboard({ onLogout }: any) {
 
   const handelJoinGene = () => {
     setActiveChat('general');
-    const ws = new WebSocket('/ws/chat/')
+    const ws = new WebSocket('http://localhost:8000/ws/chat/')
 
     ws.onopen = () => {
       setSocket(ws)
@@ -314,7 +314,7 @@ function Dashboard({ onLogout }: any) {
       setPrivSocket(null)
     }
 
-    const ws = new WebSocket(`/ws/chat/private/${room_name}/`)
+    const ws = new WebSocket(`http://localhost:8000/ws/chat/private/${room_name}/`)
 
     ws.onopen = () => {
       setPrivSocket(ws)
