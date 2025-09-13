@@ -26,8 +26,6 @@ shell-frontend:
 shell-redis:
 	$(D-C) -f $(C-F) exec  redis bash
 
-clean:
-	$(D-C) -f $(C-F) down --volumes --remove-orphans
 
 
 
