@@ -269,14 +269,23 @@ function Dashboard({ onLogout }: any) {
   }
 
   // Fetch unread notifications count
+  useEffect(() => {
+    const fetchNoftification =  async () => {
+      const response = await axiosInstance.get('/api/notify/');
+      if (response.status === 200) {
+        setNotification(response.data.Invitations)
+      }
+    }
+    fetchNoftification();
+    const interval = setInterval(fetchNoftification, 5000)
+    return () => clearInterval(interval)
+
+      
+  }, [])
 
 
   const handleNotifications = async () => {
-    const response = await axiosInstance.get('/api/notify/');
-    if (response.status === 200) {
-      setNotification(response.data.Invitations)
-      setShowNotificationPopup(true);
-    }
+    setShowNotificationPopup(true);
 
   };
 
