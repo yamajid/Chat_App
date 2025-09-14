@@ -117,7 +117,7 @@ function Dashboard({ onLogout }: any) {
 
   const handelJoinGene = () => {
     setActiveChat('general');
-    const ws = new WebSocket('http://localhost:8000/ws/chat/')
+    const ws = new WebSocket('ws://localhost:8000/ws/chat/')
 
     ws.onopen = () => {
       setSocket(ws)
