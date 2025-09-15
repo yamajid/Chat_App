@@ -6,9 +6,14 @@ from authentication.serializers import UserSerializer
 
 
 class MessageSerializers(serializers.ModelSerializer):
+
+    timestamp = serializers. SerializerMethodField()
+
     class Meta:
         model = Message
         fields = ["room", "sender", "content", 'timestamp', "is_invitation"]
+    def get_timestamp(sel, obj):
+        return obj.timestamp.strftime("%H:%M")
 
 class ChatRoomSerializers(serializers.ModelSerializer):
     participants = UserSerializer(many=True, read_only=True)
