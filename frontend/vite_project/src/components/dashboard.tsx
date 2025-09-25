@@ -127,7 +127,9 @@ function Dashboard({ onLogout }: any) {
       setSocket(null)
       console.log('WebSocket connection closed')
     }
-    ws.onmessage = () => {
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      setMessages(prev => [...prev, data.message])
       setReady((prev: any) => !prev)
     }
   }
@@ -141,7 +143,7 @@ function Dashboard({ onLogout }: any) {
       return;
     const messageData = {
       content: message,
-      sender: id,
+      sender: username,
       id : id
     }
     
@@ -225,7 +227,6 @@ function Dashboard({ onLogout }: any) {
         if (error.response) {
           if (error.response.status === 401) {
             await refreshAuthToken()
-            console.log("errrrrrrrrror")
           }
         }
       }
@@ -255,7 +256,6 @@ function Dashboard({ onLogout }: any) {
 
       });
       if (response.status === 200) {
-        console.log("successsssss")
       }
     }
     catch (error: any) {
@@ -572,10 +572,27 @@ function Dashboard({ onLogout }: any) {
               {/* Messages Area */}
               <div className="h-[calc(100%-130px)] p-4 overflow-y-auto">
                 {messages.map((message, index) => (
-                  <div key={index} className={`flex m-4  ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs p-3 rounded-lg ${message.sender === 'me' ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
-                      <p>{message.content}</p>
-                      <p className="text-xs mt-1">{message.timestamp}</p>
+                  <div key={index} className={`flex mb-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-sm p-3 rounded-lg shadow-sm ${
+                      message.sender === localStorage.getItem('username') 
+                        ? 'bg-indigo-600 text-white rounded-br-sm' 
+                        : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                    }`}>
+                      <p className={`text-xs font-medium mb-1 ${
+                        message.sender === localStorage.getItem('username') 
+                          ? 'text-indigo-100' 
+                          : 'text-gray-500'
+                      }`}>
+                        {message.sender === localStorage.getItem('username') ? 'You' : message.sender}
+                      </p>
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <p className={`text-xs mt-2 ${
+                        message.sender === localStorage.getItem('username') 
+                          ? 'text-indigo-200' 
+                          : 'text-gray-400'
+                      }`}>
+                        {message.timestamp}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -693,11 +710,27 @@ function Dashboard({ onLogout }: any) {
                   {/* Messages Area */}
                   <div className="h-[calc(100%-80px)] p-4 overflow-y-auto">
                     {messages.map((message, index) => (
-                      <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-xs p-3 rounded-lg ${message.sender === localStorage.getItem('username') ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
-                          <p className="font-medium">{message.sender}</p>
-                          <p>{message.content}</p>
-                          <p className="text-xs mt-1">{message.timestamp}</p>
+                      <div key={index} className={`flex mb-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-sm p-3 rounded-lg shadow-sm ${
+                          message.sender === localStorage.getItem('username') 
+                            ? 'bg-indigo-600 text-white rounded-br-sm' 
+                            : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                        }`}>
+                          <p className={`text-xs font-medium mb-1 ${
+                            message.sender === localStorage.getItem('username') 
+                              ? 'text-indigo-100' 
+                              : 'text-gray-500'
+                          }`}>
+                            {message.sender === localStorage.getItem('username') ? 'You' : message.sender}
+                          </p>
+                          <p className="text-sm leading-relaxed">{message.content}</p>
+                          <p className={`text-xs mt-2 ${
+                            message.sender === localStorage.getItem('username') 
+                              ? 'text-indigo-200' 
+                              : 'text-gray-400'
+                          }`}>
+                            {message.timestamp}
+                          </p>
                         </div>
                       </div>
                     ))}

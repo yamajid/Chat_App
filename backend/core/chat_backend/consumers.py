@@ -48,27 +48,31 @@ class GeneralChatConsumer(AsyncWebsocketConsumer):
             message = {
                 "type" : "general",
                 "room" : 1,
-                "sender" : data["sender"],
+                "sender" : data["id"],
                 "content" : data["content"],
                 "is_invitation" : False
             }
-            print("general messageeeeeeee: ", message)
-            await self.savemessage(message)
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "chat_message",
-                    "message": message,
-                }
-            )
+            saved_message = await self.savemessage(message)
+            if saved_message:
+                message["sender"] = data["sender"]
+                message["timestamp"] = saved_message.timestamp.strftime("%H:%M")
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        "type": "chat_message",
+                        "message": message,
+                    }
+                )
 
     @database_sync_to_async
     def savemessage(self, message):
         serializer = MessageSerializers(data=message)
         if serializer.is_valid():
-            serializer.save()
+            saved_message = serializer.save()
+            return saved_message
         else:
             print(serializer.errors)
+            return None
 
     async def chat_message(self, event):
         message = event["message"]
@@ -118,16 +122,19 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
             "is_invitation": False
         }
         
-        await self.save_message(message)
-        message["sender"] = data["sender"]
-        print("private messageeeeeeee: ", message)
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "chat_message",
-                "message": message
-            }
-        )
+        # Save message and get the saved instance with timestamp
+        saved_message = await self.save_message(message)
+        if saved_message:
+            message["sender"] = data["sender"]
+            message["timestamp"] = saved_message.timestamp.strftime("%H:%M")
+            print("private messageeeeeeee: ", message)
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "chat_message",
+                    "message": message
+                }
+            )
 
     async def chat_message(self, event):
         message = event["message"]
@@ -140,9 +147,11 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
             message['room'] = room.id
             serializer = MessageSerializers(data=message)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            saved_message = serializer.save()
+            return saved_message
         except Exception as e:
             print(str(e))
+            return None
 
     @database_sync_to_async
     def verify_user_permission(self):
