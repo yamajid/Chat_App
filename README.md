@@ -28,11 +28,11 @@ The app is fully containerized with **Docker Compose** and uses **NGINX** as a r
 - **Framework**: Django & Django REST Framework  
 - **Real-Time**: Django Channels (WebSockets)  
 - **Authentication**: JWT (access & refresh tokens)  
-- **Database**: PostgreSQL  
+- **Database**: PostgreSQL  (Currently using SQLite)
 
 ### Frontend Development
 - **Framework**: React.js + TypeScript  
-- **Styling**: Modern CSS / Tailwind 
+- **Styling**: CSS with Framer Motion / Tailwind 
 - **State Management**: React Context 
 - **API Communication**: Axios with centralized instance  
 
