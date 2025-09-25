@@ -10,7 +10,6 @@ function Dashboard({ onLogout }: any) {
   const [users, setUsers] = useState<Users[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState<string | null>('');
-  const [ready, setReady] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [privSocket, setPrivSocket] = useState<WebSocket | null>(null);
@@ -106,7 +105,7 @@ function Dashboard({ onLogout }: any) {
       };
       fetchMessages();
     }
-  }, [activeChat, ready]);
+  }, [activeChat]);
 
 
 
@@ -130,7 +129,7 @@ function Dashboard({ onLogout }: any) {
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
       setMessages(prev => [...prev, data.message])
-      setReady((prev: any) => !prev)
+      // Removed setReady trigger to prevent unnecessary API refetch that overwrites messages
     }
   }
 
@@ -335,8 +334,8 @@ function Dashboard({ onLogout }: any) {
     }
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      setReady((prev: any) => !prev)
       setMessages(prev => [...prev, data.message])
+      // Removed setReady trigger to prevent unnecessary API refetch
     }
   }
 
@@ -572,27 +571,12 @@ function Dashboard({ onLogout }: any) {
               {/* Messages Area */}
               <div className="h-[calc(100%-130px)] p-4 overflow-y-auto">
                 {messages.map((message, index) => (
-                  <div key={index} className={`flex mb-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-sm p-3 rounded-lg shadow-sm ${
-                      message.sender === localStorage.getItem('username') 
-                        ? 'bg-indigo-600 text-white rounded-br-sm' 
-                        : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
-                    }`}>
-                      <p className={`text-xs font-medium mb-1 ${
-                        message.sender === localStorage.getItem('username') 
-                          ? 'text-indigo-100' 
-                          : 'text-gray-500'
-                      }`}>
-                        {message.sender === localStorage.getItem('username') ? 'You' : message.sender}
-                      </p>
-                      <p className="text-sm leading-relaxed">{message.content}</p>
-                      <p className={`text-xs mt-2 ${
-                        message.sender === localStorage.getItem('username') 
-                          ? 'text-indigo-200' 
-                          : 'text-gray-400'
-                      }`}>
-                        {message.timestamp}
-                      </p>
+                  <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-xs p-3 rounded-lg ${message.sender === localStorage.getItem('username') ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
+                      {/* Show username in general chat for group context */}
+                      <p className="font-medium text-sm mb-1">{message.sender}</p>
+                      <p>{message.content}</p>
+                      <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
                     </div>
                   </div>
                 ))}
@@ -745,22 +729,12 @@ function Dashboard({ onLogout }: any) {
                         </div>
                       </div>
                     ) : (
-                      // Show messages when a specific room is selected
                       messages.map((message, index) => (
-                        <div key={index} className={`flex mb-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-sm p-3 rounded-lg shadow-sm ${
-                            message.sender === localStorage.getItem('username') 
-                              ? 'bg-indigo-600 text-white rounded-br-sm' 
-                              : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
-                          }`}>
-                            <p className="text-sm leading-relaxed">{message.content}</p>
-                            <p className={`text-xs mt-2 ${
-                              message.sender === localStorage.getItem('username') 
-                                ? 'text-indigo-200' 
-                                : 'text-gray-400'
-                            }`}>
-                              {message.timestamp}
-                            </p>
+                        <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-xs p-3 rounded-lg ${message.sender === localStorage.getItem('username') ? 'bg-indigo-600 text-white' : 'bg-gray-100'}`}>
+                            {/* No username display in private messages - it's just between two users */}
+                            <p>{message.content}</p>
+                            <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
                           </div>
                         </div>
                       ))
