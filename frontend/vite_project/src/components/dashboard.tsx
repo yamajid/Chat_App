@@ -689,78 +689,111 @@ function Dashboard({ onLogout }: any) {
               {/* Two-column layout: Room list and Chat area */}
               <div className="flex h-[calc(100%-130px)]">
                 {/* Room list sidebar */}
-                <div className="w-1/4 border-r border-gray-200 overflow-y-auto">
-                  {rooms.map((room) => (
-                    <div
-                      key={room.name}
-                      className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-300"
-                      onClick={() => {
-                        // Fetch messages for this room when clicked
-                        fetchPrivateRoomMessages(room.name);
-                        setActiveChat(`private-${room.name}`);
-                      }}
-                    >
-                      <p className="font-semibold">{room.name}</p>
+                <div className="w-1/4 border-r border-gray-200 overflow-y-auto bg-gray-50">
+                  <div className="p-4 border-b border-gray-300 bg-white">
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Private Chats</h3>
+                  </div>
+                  {rooms.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      <p className="text-sm">No private chats yet</p>
+                      <p className="text-xs mt-1">Create a new room to start chatting</p>
                     </div>
-                  ))}
+                  ) : (
+                    rooms.map((room) => (
+                      <div
+                        key={room.name}
+                        className={`p-4 hover:bg-white cursor-pointer border-b border-gray-200 transition-colors ${
+                          activeChat === `private-${room.name}` ? 'bg-white border-l-4 border-l-indigo-600' : ''
+                        }`}
+                        onClick={() => {
+                          // Fetch messages for this room when clicked
+                          fetchPrivateRoomMessages(room.name);
+                          setActiveChat(`private-${room.name}`);
+                        }}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span className="text-indigo-600 font-semibold">
+                              {room.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate">{room.name}</p>
+                            <p className="text-xs text-gray-500">Private conversation</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
 
                 {/* Chat area */}
                 <div className="w-3/4 flex flex-col">
                   {/* Messages Area */}
                   <div className="h-[calc(100%-80px)] p-4 overflow-y-auto">
-                    {messages.map((message, index) => (
-                      <div key={index} className={`flex mb-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-sm p-3 rounded-lg shadow-sm ${
-                          message.sender === localStorage.getItem('username') 
-                            ? 'bg-indigo-600 text-white rounded-br-sm' 
-                            : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
-                        }`}>
-                          <p className={`text-xs font-medium mb-1 ${
-                            message.sender === localStorage.getItem('username') 
-                              ? 'text-indigo-100' 
-                              : 'text-gray-500'
-                          }`}>
-                            {message.sender === localStorage.getItem('username') ? 'You' : message.sender}
-                          </p>
-                          <p className="text-sm leading-relaxed">{message.content}</p>
-                          <p className={`text-xs mt-2 ${
-                            message.sender === localStorage.getItem('username') 
-                              ? 'text-indigo-200' 
-                              : 'text-gray-400'
-                          }`}>
-                            {message.timestamp}
+                    {activeChat === 'private' ? (
+                      // Show instruction when no specific room is selected
+                      <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                        <div className="text-center">
+                          <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                          </svg>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Select a conversation</h3>
+                          <p className="text-sm text-gray-500 max-w-sm">
+                            Choose a private chat from the list to start messaging, or create a new room to begin a conversation.
                           </p>
                         </div>
                       </div>
-                    ))}
+                    ) : (
+                      // Show messages when a specific room is selected
+                      messages.map((message, index) => (
+                        <div key={index} className={`flex mb-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-sm p-3 rounded-lg shadow-sm ${
+                            message.sender === localStorage.getItem('username') 
+                              ? 'bg-indigo-600 text-white rounded-br-sm' 
+                              : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                          }`}>
+                            <p className="text-sm leading-relaxed">{message.content}</p>
+                            <p className={`text-xs mt-2 ${
+                              message.sender === localStorage.getItem('username') 
+                                ? 'text-indigo-200' 
+                                : 'text-gray-400'
+                            }`}>
+                              {message.timestamp}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Message Input */}
-                  <motion.div
-                    className="p-4 border-t border-gray-200"
-                    whileHover={{ boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={message as string}
-                        onChange={handleChange}
-                        placeholder="Type your message..."
-                        onKeyDown={handdleKeyPress}
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      />
-                      <button
-                        className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
-                        onClick={handleSentMessage}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                      </button>
-                    </div>
-                  </motion.div>
+                  {/* Message Input - Only show when a specific room is selected */}
+                  {activeChat !== 'private' && activeChat?.startsWith('private-') && (
+                    <motion.div
+                      className="p-4 border-t border-gray-200"
+                      whileHover={{ boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={message as string}
+                          onChange={handleChange}
+                          placeholder="Type your message..."
+                          onKeyDown={handdleKeyPress}
+                          className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                        <button
+                          className="p-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+                          onClick={handleSentMessage}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
             </>
