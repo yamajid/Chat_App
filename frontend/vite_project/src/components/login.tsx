@@ -9,7 +9,6 @@ function Login({ onLogin }: any) {
     password: ''
   });
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -33,23 +32,56 @@ function Login({ onLogin }: any) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-900 via-pink-900 to-indigo-900 font-inter">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+            rotate: [0, 5, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -20, 0],
+            y: [0, 30, 0],
+            rotate: [0, -5, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-full blur-3xl"
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', damping: 10, stiffness: 100 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
         <motion.div
-          className="bg-white rounded-2xl shadow-xl overflow-hidden p-8"
-          whileHover={{ y: -5 }}
+          className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden p-8"
+          whileHover={{ y: -5, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}
           transition={{ type: 'spring', stiffness: 300 }}
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+          }}
         >
           <motion.h2
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-3xl font-bold text-center mb-8 text-gray-800"
+            className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent"
           >
             Welcome Back
           </motion.h2>
@@ -60,7 +92,7 @@ function Login({ onLogin }: any) {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="username" className="block text-sm font-medium text-white/90 mb-2">
                 Username
               </label>
               <motion.input
@@ -69,10 +101,10 @@ function Login({ onLogin }: any) {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="w-full px-4 py-3 bg-white/10 backdrop-blur-lg border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all text-white placeholder-white/60"
                 whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
+                  boxShadow: "0 0 0 2px rgba(168, 85, 247, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -83,7 +115,7 @@ function Login({ onLogin }: any) {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
                 Password
               </label>
               <motion.input
@@ -92,10 +124,10 @@ function Login({ onLogin }: any) {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="w-full px-4 py-3 bg-white/10 backdrop-blur-lg border border-white/30 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all text-white placeholder-white/60"
                 whileFocus={{
                   scale: 1.02,
-                  boxShadow: "0 0 0 2px rgba(59, 130, 246, 0.5)"
+                  boxShadow: "0 0 0 2px rgba(168, 85, 247, 0.5)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               />
@@ -108,18 +140,19 @@ function Login({ onLogin }: any) {
             >
               <motion.button
                 type="submit"
-                className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                className="w-full py-3 px-6 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-2xl transition-all relative overflow-hidden group"
                 whileHover={{
                   scale: 1.02,
-                  background: "linear-gradient(to right, #2563eb, #4f46e5)"
+                  background: "linear-gradient(to right, #8b5cf6, #ec4899, #7c3aed)"
                 }}
                 whileTap={{
                   scale: 0.98,
-                  background: "linear-gradient(to right, #1d4ed8, #4338ca)"
+                  background: "linear-gradient(to right, #7c3aed, #db2777, #6d28d9)"
                 }}
                 transition={{ type: 'spring', stiffness: 400 }}
               >
-                Sign In
+                <span className="relative z-10">Login</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.button>
             </motion.div>
 
@@ -129,13 +162,13 @@ function Login({ onLogin }: any) {
               transition={{ delay: 0.5 }}
               className="text-center mt-4"
             >
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-white/70">
                 Don't have an account?{' '}
                 <a
                   href="/register"
-                  className="text-blue-600 hover:underline"
+                  className="text-purple-300 hover:text-pink-300 transition-colors duration-200"
                 >
-                  Create Account
+                  Register
                 </a>
               </p>
             </motion.div>
