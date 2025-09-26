@@ -44,10 +44,10 @@ class FetchUsers(APIView):
     def get(self, request):
         try:
             id = request.GET.get("id")
-            users = User.objects.exclude(id=id)
-            serializer = UserSerializer(users, many=True)
-            print(serializer.data)
-            return Response({"users":  serializer.data}, status=status.HTTP_200_OK)
+            users = User.objects.exclude(id=id).values('username')
+            # Convert queryset to list of dictionaries with just username
+            users_data = [{"username": user['username']} for user in users]
+            return Response({"users": users_data}, status=status.HTTP_200_OK)
         except Exception as e:
             print(e)
             return Response({"Not found"}, status=status.HTTP_404_NOT_FOUND)

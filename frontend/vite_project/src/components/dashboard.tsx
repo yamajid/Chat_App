@@ -373,7 +373,7 @@ function Dashboard({ onLogout }: any) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-cyan-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-cyan-50 font-inter">
       {/* Navigation Sidebar */}
       <motion.div
         initial={{ x: -100 }}
@@ -556,12 +556,12 @@ function Dashboard({ onLogout }: any) {
               {/* Messages Area */}
               <div className="h-[calc(100%-130px)] p-4 overflow-y-auto">
                 {messages.map((message, index) => (
-                  <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-xs p-3 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 ${message.sender === localStorage.getItem('username') ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-300/50' : 'bg-gradient-to-r from-white to-purple-50 text-gray-800 shadow-purple-200/30 border border-purple-100'}`}>
+                  <div key={index} className={`flex mb-3 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-80 min-w-24 w-fit px-4 py-3 rounded-2xl backdrop-blur-sm border transform hover:scale-[1.02] transition-all duration-300 font-inter ${message.sender === localStorage.getItem('username') ? 'bg-gradient-to-br from-purple-500 via-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/25 border-purple-400/30' : 'bg-white/80 text-gray-800 shadow-lg shadow-gray-200/50 border-gray-200/50 backdrop-blur-md'}`}>
                       {/* Show username in general chat for group context */}
-                      <p className="font-medium text-sm mb-1 opacity-90">{message.sender}</p>
-                      <p>{message.content}</p>
-                      <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
+                      <p className="font-medium text-xs mb-1.5 opacity-75 tracking-wide uppercase">{message.sender}</p>
+                      <p className="text-sm leading-relaxed break-words whitespace-pre-wrap font-medium">{message.content}</p>
+                      <p className="text-xs mt-2 opacity-60 font-light">{message.timestamp}</p>
                     </div>
                   </div>
                 ))}
@@ -703,9 +703,9 @@ function Dashboard({ onLogout }: any) {
                 </div>
 
                 {/* Chat area */}
-                <div className="w-3/4 flex flex-col bg-gradient-to-br from-white to-purple-50">
+                <div className="w-3/4 relative bg-gradient-to-br from-white to-purple-50 h-full">
                   {/* Messages Area */}
-                  <div className="h-[calc(100%-80px)] p-4 overflow-y-auto">
+                  <div className="h-full p-4 pb-20 overflow-y-auto">
                     {activeChat === 'private' ? (
                       // Show instruction when no specific room is selected
                       <div className="flex flex-col items-center justify-center h-full text-purple-500">
@@ -721,11 +721,11 @@ function Dashboard({ onLogout }: any) {
                       </div>
                     ) : (
                       messages.map((message, index) => (
-                        <div key={index} className={`flex m-4 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-xs p-3 rounded-xl shadow-lg transform hover:scale-105 transition-all duration-200 ${message.sender === localStorage.getItem('username') ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-300/50' : 'bg-gradient-to-r from-white to-purple-50 text-gray-800 shadow-purple-200/30 border border-purple-100'}`}>
+                        <div key={index} className={`flex mb-3 ${message.sender === localStorage.getItem('username') ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-80 min-w-24 w-fit px-4 py-3 rounded-2xl backdrop-blur-sm border transform hover:scale-[1.02] transition-all duration-300 font-inter ${message.sender === localStorage.getItem('username') ? 'bg-gradient-to-br from-purple-500 via-purple-600 to-pink-500 text-white shadow-lg shadow-purple-500/25 border-purple-400/30' : 'bg-white/80 text-gray-800 shadow-lg shadow-gray-200/50 border-gray-200/50 backdrop-blur-md'}`}>
                             {/* No username display in private messages - it's just between two users */}
-                            <p>{message.content}</p>
-                            <p className="text-xs mt-1 opacity-70">{message.timestamp}</p>
+                            <p className="text-sm leading-relaxed break-words whitespace-pre-wrap font-medium">{message.content}</p>
+                            <p className="text-xs mt-2 opacity-60 font-light">{message.timestamp}</p>
                           </div>
                         </div>
                       ))
@@ -733,10 +733,10 @@ function Dashboard({ onLogout }: any) {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Message Input - Only show when a specific room is selected */}
+                  {/* Message Input - Fixed at bottom when in private chat */}
                   {activeChat !== 'private' && activeChat?.startsWith('private-') && (
                     <motion.div
-                      className="p-4 border-t border-purple-200/50 bg-gradient-to-r from-white to-purple-50"
+                      className="absolute bottom-0 left-0 right-0 p-3 border-t border-purple-200/50 bg-gradient-to-r from-white to-purple-50"
                       whileHover={{ boxShadow: '0 4px 20px rgba(147, 51, 234, 0.1)' }}
                     >
                       <div className="flex items-center space-x-2">
@@ -802,15 +802,279 @@ function Dashboard({ onLogout }: any) {
           )}
 
           {!activeChat && (
-            <div className="flex flex-col items-center justify-center h-full text-purple-500">
-              <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">Welcome to ChatApp!</h2>
-              <p className="mb-8 text-center text-purple-600">Select a chat to start messaging or explore our community.</p>
-              <button
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full shadow-lg hover:from-purple-600 hover:to-pink-600 hover:scale-105 transform transition-all duration-200"
-                onClick={handelJoinGene}
-              >
-                Join the Conversation
-              </button>
+            <div className="relative flex flex-col items-center justify-center h-full text-purple-500 overflow-hidden">
+              {/* 3D Animated Dating App Background - More Visible */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Large Floating Hearts - More Visible */}
+                <motion.div
+                  className="absolute top-20 left-20 text-pink-400 opacity-60 drop-shadow-lg"
+                  animate={{
+                    y: [-20, -50, -20],
+                    rotate: [0, 20, -20, 0],
+                    scale: [1, 1.4, 1]
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <svg className="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute top-32 right-24 text-purple-400 opacity-50 drop-shadow-lg"
+                  animate={{
+                    y: [-15, -45, -15],
+                    rotate: [0, -25, 25, 0],
+                    scale: [0.8, 1.3, 0.8]
+                  }}
+                  transition={{
+                    duration: 1.8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.3
+                  }}
+                >
+                  <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-40 left-32 text-cyan-400 opacity-55 drop-shadow-lg"
+                  animate={{
+                    y: [-10, -40, -10],
+                    rotate: [0, 30, -15, 0],
+                    scale: [1, 1.5, 1]
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 2
+                  }}
+                >
+                  <svg className="w-14 h-14" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-20 right-40 text-pink-400 opacity-45 drop-shadow-lg"
+                  animate={{
+                    y: [-25, -55, -25],
+                    rotate: [0, -20, 20, 0],
+                    scale: [0.9, 1.4, 0.9]
+                  }}
+                  transition={{
+                    duration: 4.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 0.5
+                  }}
+                >
+                  <svg className="w-18 h-18" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </motion.div>
+
+                {/* Additional Hearts for More Romance */}
+                <motion.div
+                  className="absolute top-60 left-60 text-rose-400 opacity-40 drop-shadow-md"
+                  animate={{
+                    y: [-15, -35, -15],
+                    rotate: [0, 15, -10, 0],
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{
+                    duration: 7,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 3
+                  }}
+                >
+                  <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-60 right-60 text-purple-400 opacity-35 drop-shadow-md"
+                  animate={{
+                    y: [-20, -40, -20],
+                    rotate: [0, -25, 15, 0],
+                    scale: [0.8, 1.3, 0.8]
+                  }}
+                  transition={{
+                    duration: 5.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1.5
+                  }}
+                >
+                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  </svg>
+                </motion.div>
+
+                {/* Bright Romantic Sparkles */}
+                <motion.div
+                  className="absolute top-16 right-16 text-purple-300 opacity-70 drop-shadow-lg"
+                  animate={{
+                    rotate: [0, 360],
+                    scale: [1, 2, 1],
+                    opacity: [0.5, 0.9, 0.5]
+                  }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "linear"
+                  }}
+                >
+                  <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0l3.5 7.5L24 12l-8.5 4.5L12 24l-3.5-7.5L0 12l8.5-4.5z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-32 left-16 text-pink-300 opacity-60 drop-shadow-md"
+                  animate={{
+                    rotate: [360, 0],
+                    scale: [0.8, 1.8, 0.8],
+                    opacity: [0.4, 0.8, 0.4]
+                  }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "linear",
+                    delay: 3
+                  }}
+                >
+                  <svg className="w-14 h-14" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0l3.5 7.5L24 12l-8.5 4.5L12 24l-3.5-7.5L0 12l8.5-4.5z"/>
+                  </svg>
+                </motion.div>
+
+                {/* Cupid Arrows for Dating Theme */}
+                <motion.div
+                  className="absolute top-40 right-80 text-rose-400 opacity-50 drop-shadow-md"
+                  animate={{
+                    x: [0, 30, 0],
+                    rotate: [0, 15, -15, 0],
+                    scale: [1, 1.2, 1]
+                  }}
+                  transition={{
+                    duration: 5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 2
+                  }}
+                >
+                  <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 6l8-4 8 4-8 4-8-4zm8 4v12l-6-3v-8l6-1zm2 0l6-1v8l-6 3V10z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-48 left-72 text-purple-400 opacity-45 drop-shadow-md"
+                  animate={{
+                    x: [0, -25, 0],
+                    rotate: [0, -20, 20, 0],
+                    scale: [0.9, 1.3, 0.9]
+                  }}
+                  transition={{
+                    duration: 7,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1
+                  }}
+                >
+                  <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 6l8-4 8 4-8 4-8-4zm8 4v12l-6-3v-8l6-1zm2 0l6-1v8l-6 3V10z"/>
+                  </svg>
+                </motion.div>
+
+                {/* Love Letter Icons */}
+                <motion.div
+                  className="absolute top-80 left-48 text-pink-400 opacity-40 drop-shadow-sm"
+                  animate={{
+                    y: [-5, -25, -5],
+                    rotate: [0, 10, -5, 0],
+                    scale: [1, 1.15, 1]
+                  }}
+                  transition={{
+                    duration: 8,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 4
+                  }}
+                >
+                  <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 7l8-5H4l8 5zm0 2L4 8v10h16V8l-8 5z"/>
+                  </svg>
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-80 right-48 text-cyan-400 opacity-35 drop-shadow-sm"
+                  animate={{
+                    y: [-10, -20, -10],
+                    rotate: [0, -8, 12, 0],
+                    scale: [0.8, 1.1, 0.8]
+                  }}
+                  transition={{
+                    duration: 6.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 2.5
+                  }}
+                >
+                  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 7l8-5H4l8 5zm0 2L4 8v10h16V8l-8 5z"/>
+                  </svg>
+                </motion.div>
+
+                {/* Floating Couple Silhouettes */}
+                <motion.div
+                  className="absolute top-24 left-1/2 transform -translate-x-1/2 text-purple-200 opacity-10"
+                  animate={{
+                    y: [-5, -25, -5],
+                    scale: [1, 1.1, 1],
+                    opacity: [0.1, 0.2, 0.1]
+                  }}
+                  transition={{
+                    duration: 10,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <svg className="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.5 7.5h-1c-.83 0-1.5.67-1.5 1.5v6c0 .83.67 1.5 1.5 1.5H19v6h1zM12.5 11.5c.83 0 1.5-.67 1.5-1.5V4c0-1.11-.89-2-2-2s-2 .89-2 2v6c0 .83.67 1.5 1.5 1.5h1zm-2 .5v10h1v-8h1v8h1V12h-3z"/>
+                  </svg>
+                </motion.div>
+
+                {/* Romantic Background Pattern */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-50/30 via-pink-50/20 to-cyan-50/30 opacity-50">
+                  <div className="absolute inset-0" style={{
+                    backgroundImage: `radial-gradient(circle at 25% 25%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
+                                     radial-gradient(circle at 75% 75%, rgba(244, 114, 182, 0.1) 0%, transparent 50%),
+                                     radial-gradient(circle at 50% 50%, rgba(103, 232, 249, 0.05) 0%, transparent 50%)`,
+                  }} />
+                </div>
+              </div>
+
+              {/* Original Welcome Content - Kept Exactly As Is */}
+              <div className="relative z-10">
+                <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">Welcome to ChatApp!</h2>
+                <button
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full shadow-lg hover:from-purple-600 hover:to-pink-600 hover:scale-105 transform transition-all duration-200"
+                  onClick={handelJoinGene}
+                >
+                  Join the Conversation
+                </button>
+              </div>
             </div>
           )}
 
